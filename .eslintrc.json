@@ -5,8 +5,14 @@
   "extends": [
     "airbnb"
   ],
+  "parser": "@typescript-eslint/parser",
+  "plugins": [
+    "react",
+    "@typescript-eslint"
+  ],
   "rules": {
     "react/prefer-stateless-function": 0,
-    "quotes": 0
+    "quotes": 0,
+    "import/no-extraneous-dependencies": "off"
   }
 }
