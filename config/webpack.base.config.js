@@ -32,7 +32,7 @@ const webpackConfigBase = {
       },
     ],
   },
-  plugins: [new ForkTsCheckerWebpackPlugin()],
+  // plugins: [new ForkTsCheckerWebpackPlugin()],
 };
 
 module.exports = webpackConfigBase;

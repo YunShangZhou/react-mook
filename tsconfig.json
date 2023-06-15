@@ -108,7 +108,7 @@
   "include": [
     "**/*.ts",
     "**/*.tsx",
-    "**/*.d.ts"
+    "**/*.d.ts",
   ],
   "exclude": [
     "node_modules",

@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from 'antd';
 import './style.scss';
 import { get } from "./utils/request";
+import TimeRuler from "./components/TimeRuler";
 
 const App: React.FC = (props: PropsWithChildren) => {
   const { children } = props;
@@ -39,6 +40,7 @@ const App: React.FC = (props: PropsWithChildren) => {
       <Button type="link" onClick={() => handleLink('index')}>跳转至index</Button>
       <Button type="primary" ghost onClick={handleGetGray}>获取gray Json</Button>
       <Button type="primary" ghost onClick={handleGetYapiGray}>获取user</Button>
+      <TimeRuler />
     </div>
   );
 };

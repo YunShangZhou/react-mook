@@ -27,14 +27,14 @@ const webpackConfigDev = {
   ],
   devtool: 'eval-source-map',
   devServer: {
-    host: '0.0.0.0',
+    // host: '0.0.0.0',
     proxy: {
       '/': {
         target: 'http://localhost:3000/mock/11',
       },
     },
     // static: path.join(__dirname, '.'),
-    historyApiFallback: false,
+    // historyApiFallback: false,
     onBeforeSetupMiddleware(devServer) {
       // const { app } = devServer
       // const projectDir = path.resolve()
@@ -44,4 +44,5 @@ const webpackConfigDev = {
   },
 };
 
-module.exports = swp.wrap(merge(webpackConfigBase, webpackConfigDev));
+module.exports = merge(webpackConfigBase, webpackConfigDev);
+// module.exports = swp.wrap(merge(webpackConfigBase, webpackConfigDev));
