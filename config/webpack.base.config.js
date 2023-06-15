@@ -1,7 +1,8 @@
 const path = require('path');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
-const devMode = process.env.NODE_ENV !== 'production'
+const devMode = process.env.NODE_ENV !== 'production';
 
 const webpackConfigBase = {
   entry: path.join(__dirname, '../src/index.jsx'),
@@ -26,12 +27,12 @@ const webpackConfigBase = {
       {
         test: /\.(sc|c)ss/,
         use: [
-          devMode ? 'style-loader' : MiniCssExtractPlugin.loader
-          , 'css-loader', 'sass-loader'],
+          devMode ? 'style-loader' : MiniCssExtractPlugin.loader,
+          'css-loader', 'sass-loader'],
       },
-
     ],
   },
+  plugins: [new ForkTsCheckerWebpackPlugin()],
 };
 
 module.exports = webpackConfigBase;

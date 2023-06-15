@@ -1,8 +1,6 @@
-import axios from 'axios'
+import axios from 'axios';
 
 const instance = axios.Axios({
-    baseUrl: './',
-    timeout: 5000
-})
-
-
+  baseUrl: './',
+  timeout: 5000,
+});

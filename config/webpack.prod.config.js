@@ -4,9 +4,15 @@ const { merge } = require("webpack-merge");
 
 // const OpenBrowserPlugin = require("open-browser-webpack4-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
-const MiniCssExtractPlugin = require('mini-css-extract-plugin')
-const { CleanWebpackPlugin } = require('clean-webpack-plugin')
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const SpeedMeasurePlugin = require("speed-measure-webpack-v5-plugin");
 const webpackConfigBase = require("./webpack.base.config");
+
+const smpOptions = {
+  disabled: false,
+};
+const smp = new SpeedMeasurePlugin();
 
 // const PORT = 8080;
 
@@ -17,7 +23,7 @@ const webpackConfigDev = {
       protectWebpackAssets: true,
     }),
     new MiniCssExtractPlugin({
-      filename: '[name].[fullhase:4].css'
+      filename: '[name].[fullhase:4].css',
     }),
     new HtmlWebpackPlugin({
       inject: "body",
@@ -29,4 +35,4 @@ const webpackConfigDev = {
   devtool: 'eval-source-map',
 };
 
-module.exports = merge(webpackConfigBase, webpackConfigDev);
+module.exports = smp.wrap(merge(webpackConfigBase, webpackConfigDev));

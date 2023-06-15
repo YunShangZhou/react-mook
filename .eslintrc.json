@@ -13,6 +13,14 @@
   "rules": {
     "react/prefer-stateless-function": 0,
     "quotes": 0,
-    "import/no-extraneous-dependencies": "off"
+    "import/no-extraneous-dependencies": "off",
+    "react/react-in-jsx-scope": "off",
+    "no-use-before-define": "off",
+    "import/no-unresolved": "off",
+    "implicit-arrow-linebreak": "off",
+    "import/extensions": "off",
+    "react/function-component-definition": "off",
+    "no-unused-vars": "off",
+    "react/jsx-filename-extension": "off"
   }
 }
