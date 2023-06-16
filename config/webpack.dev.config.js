@@ -14,7 +14,7 @@ const PORT = 8081;
 const webpackConfigDev = {
   mode: "development",
   plugins: [
-    new webpack.HotModuleReplacementPlugin(), // 热更新插件
+    // new webpack.HotModuleReplacementPlugin(), // 热更新插件
     new HtmlWebpackPlugin({
       inject: "body",
       title: "React APP",
