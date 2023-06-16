@@ -36,6 +36,7 @@ const mockProps = {
   longTickHeight: 20,
   shortTickHeight: 10,
   tickColor: "orange",
+  tickFontColor: 'blue',
   tickWidth: 1,
   borderBottom: `1px solid black`,
   gap: 100,
@@ -50,12 +51,14 @@ const timeRulerStyle = (config: any) => {
     shortTickHeight,
     tickWidth,
     tickColor,
+    background,
     borderBottom,
   } = config;
 
   return {
     height: `${height}px`,
     width: `${width}px`,
+    background,
     backgroundImage: `repeating-linear-gradient(
       to right,
       ${tickColor} 0,
@@ -83,7 +86,7 @@ const getTickDom = (config: any) => {
     gap,
     shortTickHeight,
     tickFontSize,
-    tickColor,
+    tickFontColor,
     tickFontOffset,
   } = config;
   const count = Math.floor(width / gap);
@@ -94,7 +97,7 @@ const getTickDom = (config: any) => {
       value: i * gap,
       style: {
         fontSize: tickFontSize,
-        color: tickColor,
+        color: tickFontColor,
         top: `calc(100% - ${shortTickHeight}px)`,
         left: `${gap * i + tickFontOffset}px`,
         transform: "translateY(-100%)",

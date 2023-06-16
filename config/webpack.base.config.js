@@ -11,6 +11,9 @@ const webpackConfigBase = {
     filename: '[name].[fullhase:4].js',
   },
   resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'src/')
+    },
     extensions: ['.js', '.jsx', '.tsx', '.ts'],
   },
   module: {

@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { Component } from 'react'
 import { createHashRouter, RouterProvider } from 'react-router-dom'
 
 import IndexPage from '../pages/index/index'
+import DemoPage from '../pages/demo/index'
 import LoginPage from '../pages/login'
 import AppPage from '../App'
 
@@ -9,6 +10,7 @@ import AppPage from '../App'
 const allRoutes = [
     {
         path: '/',
+        // element: <DemoPage />
         element: <AppPage />,
     },
     {
@@ -19,6 +21,10 @@ const allRoutes = [
         path: '/login',
         element: <LoginPage />,
     },
+    {
+        path: '/playBar',
+        element: <DemoPage />
+    }
 ]
 
 const router = createHashRouter(allRoutes)

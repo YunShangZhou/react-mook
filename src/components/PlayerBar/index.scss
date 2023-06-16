@@ -1,0 +1,41 @@
+.player-bar-wrap {
+  --player-bar-cell-color-bg-odd: rgba(63, 87, 112, 1);
+  --player-bar-cell-color-bg-even: rgba(47, 68, 89, 1);
+  --player-bar-cell-color-bg-hover: linear-gradient(
+    to bottom,
+    rgba(134, 142, 255, 0.53),
+    rgba(134, 142, 255, 0)
+  );
+  --player-bar-cell-color-bg-mark-hover: rgba(255, 125, 0, 0.5);
+
+  --player-bar-cell-color-vertical-active: rgba(47, 68, 89, 1);
+  --player-bar-cell-color-border-top--active: rgba(47, 68, 89, 1);
+
+
+  border: 1px solid red;
+  width: fit-content;
+  padding: 20px;
+
+  * {
+    box-sizing: border-box;
+  }
+}
+
+.player-bar-content {
+  position: relative;
+  margin-top: 100px;
+}
+
+.player-bar-tick {
+  position: absolute;
+  pointer-events: none;
+}
+
+.player-bar-tick-mark {
+  position: absolute;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 0.8;
+  }
+}

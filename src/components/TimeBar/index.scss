@@ -1,0 +1,23 @@
+.time-bar-wrap {
+  border: 1px solid red;
+  width: fit-content;
+  padding: 20px;
+
+  * {
+    box-sizing: border-box;
+  }
+}
+
+.time-bar-content {
+  position: relative;
+  margin-top: 100px;
+}
+
+.time-bar-mark{
+  position: absolute;
+  cursor: pointer;
+
+  &:hover{
+    opacity: 0.8;
+  }
+}

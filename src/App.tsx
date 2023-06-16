@@ -3,21 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "antd";
 import "./style.scss";
 import { get } from "./utils/request";
-import TimeRuler from "./components/TimeRuler";
-
-const mockProps = {
-  width: 700,
-  height: 30,
-  longTickHeight: 20,
-  shortTickHeight: 10,
-  tickColor: "orange",
-  tickWidth: 1,
-  tickFontSize: 12,
-  tickFontColor: "gray", 
-  tickFontOffset: 4,
-  borderBottom: `1px solid black`,
-  gap: 100,
-};
+import TimeBar, { mockProps } from "./components/TimeBar";
 
 const App: React.FC = (props: PropsWithChildren) => {
   const { children } = props;
@@ -59,7 +45,7 @@ const App: React.FC = (props: PropsWithChildren) => {
       <Button type="primary" ghost onClick={handleGetYapiGray}>
         获取user
       </Button>
-      <TimeRuler {...mockProps} />
+      <TimeBar {...mockProps} />
     </div>
   );
 };
