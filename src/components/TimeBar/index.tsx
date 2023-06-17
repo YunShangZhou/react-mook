@@ -5,8 +5,7 @@ import "./index.scss";
 type frameRateTypes = 12 | 18 | 24 | 30 | 36 | 48 | 72;
 
 /**
- * 给定宽高，默认值，总值，自动生成刻度线，以及对应的刻度标记。
- * 根据大刻度间距，计算小刻度间距。
+ * 多帧模式: 一格将代表若干帧
  */
 interface TimeBarProps {
   width: number;
@@ -14,7 +13,7 @@ interface TimeBarProps {
   tickHeight: number; // 刻度线高
   tickColorOdd: string; // 刻度线颜色(奇数格)
   tickColorEven: string; // 刻度线颜色(偶数格)
-  tickWidth: number; // 刻度线粗细
+  tickWidth?: number; // 刻度线粗细(废弃，可根据width / top 自生成)
   markWidth?: number; // 标尺宽度
   markHeight?: number; // 标尺高度
   markBg?: string; // 标尺背景颜色
@@ -22,20 +21,24 @@ interface TimeBarProps {
   tipColor?: string; // 提示字体色
   tipFontSize?: string; // 提示字号
   tipBg?: string; // 提示背景色
+  tipWidth?: number; // 提示宽度
   borderBottom?: string; // 底边样式
   background?: string; // 背景色
   defaultValue?: string; // 默认值
   total?: number; // 总值
   frameRate?: frameRateTypes; // 帧率
+  frameMax?: number; // 最大帧数(超过范围，将会自动切换成多帧模式)
 }
 
 export const mockProps = {
+  total: 60,
   width: 700,
   // height: 30,
   tickHeight: 20,
   tickColorOdd: "#3F5770",
   tickColorEven: "#2F4459",
-  tickWidth: 50,
+  // tickWidth: 10,
+  tipWidth: 50,
   // markWidth: 25,
   markHeight: 20,
   markBg: `linear-gradient(to bottom , rgba(134, 142, 255, 0.53) , rgba(134, 142, 255, 0))`,
@@ -76,71 +79,73 @@ const timeBarStyle = (config: any) => {
   };
 };
 
-/**
- * 鼠标拖动 , 获取光标相对于父容器左侧距离，动态修改 标尺的位置
- * 拖动时,tooltip位置跟随改变。
- * hover时，光标出显示tooltip
- * */
+// 渲染 标尺dom
+const renderMarkDom = (config: any) => {
+  const {
+    tickWidth,
+    tickHeight,
+    markHeight,
+    markWidth,
+    markBg,
+    markMiddleColor,
+    markLeft,
+    tipColor,
+    tipFontSize,
+    tipBg,
+    tipWidth,
+    markRef,
+  } = config;
+
+  // 标记样式
+  const markStyle = {
+    height: `${markHeight || tickHeight}px`,
+    width: `${markWidth || tickWidth}px`,
+    background: markBg,
+    // bottom: `${tickHeight}px`,
+    bottom: 0,
+    left: `${markLeft}px`,
+  };
+
+  // 中线样式
+  const middleStyle = {
+    backgroundColor: markMiddleColor,
+  };
+
+  // 提示样式
+  const tipLeft = markLeft - tipWidth / 2 + (markWidth || tickWidth) / 2;
+  const tipStyle = {
+    fontSize: `${tipFontSize || 12}px`,
+    color: `${tipColor || "white"}`,
+    backgroundColor: `${tipBg || "rgba(63, 87, 112, 1)"}`,
+    bottom: `${tickHeight}px`,
+    left: `${tipLeft}px`,
+    height: `${tickHeight}px`,
+    width: `${tipWidth}px`,
+  };
+
+  // +1是因为markLeft为上一次的左侧间距,因此需要弥补。
+  const tipValue = Math.ceil((markLeft + 1) / tickWidth);
+
+  return (
+    <>
+      <div className="time-bar-mark" ref={markRef} style={markStyle}>
+        <div className="time-bar-mark-middle" style={middleStyle}></div>
+      </div>
+      <div className="time-bar-mark-tip" style={tipStyle}>
+        {tipValue || "1"}
+      </div>
+    </>
+  );
+};
+
 const TimeBar: React.FC<TimeBarProps> = (props) => {
-  // const { width , height , tickHeight , tickColor, tickWidth  } = props;
+  const { total = 60, frameMax = 60 , width } = props;
   const contentRef = useRef<HTMLDivElement>(null);
   const markRef = useRef<HTMLDivElement>(null);
   const [markLeft, setMarkLeft] = useState(0);
   const [isMouseDown, setIsMouseDown] = useState(false);
-
-  // 渲染 标尺dom
-  const renderMarkDom = (config: any) => {
-    const {
-      tickWidth,
-      tickHeight,
-      markWidth,
-      markHeight,
-      markBg,
-      markMiddleColor,
-      tipColor,
-      tipFontSize,
-      tipBg,
-    } = config;
-
-    // 标记样式
-    const markStyle = {
-      height: `${markHeight || tickHeight}px`,
-      width: `${markWidth || tickWidth}px`,
-      background: markBg,
-      // bottom: `${tickHeight}px`,
-      bottom: 0,
-      left: `${markLeft}px`,
-    };
-
-    // 中线样式
-    const middleStyle = {
-      backgroundColor: markMiddleColor,
-    };
-
-    // 提示样式
-    const tipWidthScale = 0.8;
-    const tipLeft = markLeft + (tickWidth * (1 - tipWidthScale)) / 2;
-    const tipStyle = {
-      fontSize: `${tipFontSize || 12}px`,
-      color: `${tipColor || "white"}`,
-      backgroundColor: `${tipBg || "rgba(63, 87, 112, 1)"}`,
-      bottom: `${tickHeight}px`,
-      left: `${tipLeft}px`,
-      height: `${tickHeight}px`,
-      width: `${tickWidth * tipWidthScale}px`,
-    };
-
-    const tipValue = Math.ceil(markLeft / (tickWidth));
-
-    return (
-      <>
-        <div className="time-bar-mark" ref={markRef} style={markStyle}>
-          <div className="time-bar-mark-middle" style={middleStyle}></div>
-        </div>
-        <div className="time-bar-mark-tip" style={tipStyle}>{tipValue || '1'}</div>
-      </>
-    );
-  };
+  const frameMode = total <= frameMax ? "single" : "multiple";
+  const tickWidth = (width / total).toFixed(2);
 
   const handleMouseUp = () => {
     setIsMouseDown(false);
@@ -153,57 +158,72 @@ const TimeBar: React.FC<TimeBarProps> = (props) => {
   const handleMouseDown = (e: any) => {
     setIsMouseDown(true);
 
-    handleMouseEventForMark(
+    handleMouseEventForMark({
       e,
-      contentRef.current as HTMLDivElement,
-      markRef.current as HTMLDivElement,
-      setMarkLeft
-    );
+      contentRef: contentRef.current as HTMLDivElement,
+      markRef: markRef.current as HTMLDivElement,
+      onSetMarkLeft: setMarkLeft,
+      mode: "down",
+      frameMode,
+    });
   };
 
   const handleMouseMove = (e: any) => {
     if (!isMouseDown) return;
 
-    handleMouseEventForMark(
+    handleMouseEventForMark({
       e,
-      contentRef.current as HTMLDivElement,
-      markRef.current as HTMLDivElement,
-      setMarkLeft
-    );
+      contentRef: contentRef.current as HTMLDivElement,
+      markRef: markRef.current as HTMLDivElement,
+      onSetMarkLeft: setMarkLeft,
+      mode: "move",
+      frameMode,
+    });
   };
 
   // 公共逻辑: 控制标记的鼠标事件。
-  const handleMouseEventForMark = (
-    e: any,
-    contentRef: HTMLDivElement,
-    markRef: HTMLDivElement,
-    onSetMarkLeft: (pos: number) => void
-  ) => {
+  const handleMouseEventForMark = (config: any) => {
+    const { e, contentRef, markRef, onSetMarkLeft, mode, frameMode } = config;
     const { pageX: cursorLeft } = e;
     const { offsetLeft: contentLeft, offsetWidth: contentWidth } = contentRef;
     const { offsetWidth: markWidth, offsetLeft: markLeft } = markRef;
-    const x = cursorLeft - contentLeft - markWidth / 2;
+    let offsetLeft = cursorLeft - contentLeft - markWidth / 2;
 
-    // 左侧边界
-    if (cursorLeft < contentLeft + markWidth / 2) return;
+    const isOverflowLeft = cursorLeft < contentLeft + markWidth / 2;
+    const isOverflowRight =
+      cursorLeft > contentLeft + (contentWidth - markWidth / 2);
 
-    // 右侧边界
-    if (cursorLeft > contentLeft + (contentWidth - markWidth / 2)) return;
+    // 边界处理
+    switch (mode) {
+      case "move":
+        if (isOverflowLeft || isOverflowRight) return;
+      case "down":
+        if (isOverflowLeft) return onSetMarkLeft(0);
+        if (isOverflowRight) return onSetMarkLeft(contentWidth - markWidth);
+    }
 
-    onSetMarkLeft(x);
+    // 一格/一帧 模式
+    if (frameMode === "single") {
+      offsetLeft = cursorLeft - contentLeft;
+      const offsetCount = Math.floor(offsetLeft / markWidth);
+
+      offsetLeft = offsetCount * markWidth;
+    }
+
+    onSetMarkLeft(offsetLeft);
   };
 
   return (
     <div
       className="time-bar-content"
       ref={contentRef}
-      style={timeBarStyle({ ...props })}
+      style={timeBarStyle({ ...props , tickWidth })}
       onMouseMove={handleMouseMove}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseLeave}
     >
-      {renderMarkDom({ ...props, contentRef })}
+      {renderMarkDom({ ...props, contentRef, frameMode, markLeft, markRef , tickWidth  })}
     </div>
   );
 };
