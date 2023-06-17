@@ -11,13 +11,31 @@
 .time-bar-content {
   position: relative;
   margin-top: 100px;
+  // border: 1px solid purple;
 }
 
-.time-bar-mark{
+.time-bar-mark {
   position: absolute;
   cursor: pointer;
+  display: flex;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.075, 0.82, 0.165, 1);
 
-  &:hover{
+  &:hover {
     opacity: 0.8;
+  }
+
+  &-middle {
+    width: 5.5%;
+    height: 100%;
+  }
+
+  &-tip {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 2px;
+    transition: all 0.3s cubic-bezier(0.075, 0.82, 0.165, 1);
   }
 }

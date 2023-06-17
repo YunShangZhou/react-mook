@@ -31,7 +31,7 @@ const App: React.FC = (props: PropsWithChildren) => {
   };
 
   return (
-    <div id="app">
+    <div id="app" className="app-wrap">
       <h1>这是App</h1>
       <Button type="dashed" danger onClick={() => handleLink("login")}>
         跳转至login
