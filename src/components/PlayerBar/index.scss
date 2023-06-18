@@ -1,17 +1,9 @@
-.player-bar-wrap {
-  --player-bar-cell-color-bg-odd: rgba(63, 87, 112, 1);
-  --player-bar-cell-color-bg-even: rgba(47, 68, 89, 1);
-  --player-bar-cell-color-bg-hover: linear-gradient(
-    to bottom,
-    rgba(134, 142, 255, 0.53),
-    rgba(134, 142, 255, 0)
-  );
-  --player-bar-cell-color-bg-mark-hover: rgba(255, 125, 0, 0.5);
+.time-bar{
+  display: flex;
+  align-items: end;
+}
 
-  --player-bar-cell-color-vertical-active: rgba(47, 68, 89, 1);
-  --player-bar-cell-color-border-top--active: rgba(47, 68, 89, 1);
-
-
+.time-bar-wrap {
   border: 1px solid red;
   width: fit-content;
   padding: 20px;
@@ -21,21 +13,39 @@
   }
 }
 
-.player-bar-content {
+.time-bar-content {
   position: relative;
-  margin-top: 100px;
+  // border: 1px solid purple;
 }
 
-.player-bar-tick {
-  position: absolute;
-  pointer-events: none;
+.time-bar-tail{
+ display: flex;
+ justify-content: center;
+ align-items: center;
+ font-weight: 500;
 }
 
-.player-bar-tick-mark {
+.time-bar-mark {
   position: absolute;
   cursor: pointer;
+  display: flex;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.075, 0.82, 0.165, 1);
 
   &:hover {
     opacity: 0.8;
+  }
+
+  &-middle {
+    height: 100%;
+  }
+
+  &-tip {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 2px;
+    transition: all 0.3s cubic-bezier(0.075, 0.82, 0.165, 1);
   }
 }

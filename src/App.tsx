@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "antd";
 import "./style.scss";
 import { get } from "./utils/request";
-import TimeBar, { mockProps } from "./components/TimeBar";
+import TimeBar, { mockProps } from "./components/PlayerBar";
 
 const App: React.FC = (props: PropsWithChildren) => {
   const { children } = props;
