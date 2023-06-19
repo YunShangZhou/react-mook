@@ -3,12 +3,14 @@ import { createHashRouter, RouterProvider } from 'react-router-dom';
 
 import IndexPage from '../pages/index/index';
 import LoginPage from '../pages/login';
+import ExamplePage from '../pages/example';
 import AppPage from '../App';
 
 const allRoutes = [
   {
     path: '/',
-    element: <AppPage />,
+    // element: <AppPage />,
+    element: <ExamplePage />,
   },
   {
     path: '/index',

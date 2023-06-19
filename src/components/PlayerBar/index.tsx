@@ -1,13 +1,12 @@
-import React, {
-  useRef, useEffect, useState, MouseEventHandler,
-} from "react";
+import React, { useRef, useEffect, useState, MouseEventHandler } from "react";
+import { Button } from "antd";
 import "./index.scss";
 
 // 帧率
 type frameRateTypes = 12 | 18 | 24 | 30 | 36 | 48 | 72;
 
 // 帧数模式
-type frameModeTypes = 'single' | 'multiple';
+type frameModeTypes = "single" | "multiple" | undefined;
 
 /**
  * 多帧模式: 一格将代表若干帧
@@ -23,7 +22,7 @@ interface TimeBarProps {
   markHeight?: number; // 标尺高度
   markBg?: string; // 标尺背景颜色
   markMiddleColor?: string; // 标尺中线颜色
-  markMiddleWidth?: number; // 标尺中线宽度
+  markMiddleWidth: number; // 标尺中线宽度
   tipColor?: string; // 提示字体色
   tipFontSize?: string; // 提示字号
   tipBg?: string; // 提示背景色
@@ -36,15 +35,15 @@ interface TimeBarProps {
   background?: string; // 背景色
   defaultValue?: string; // 默认值
   total: number; // 总值
-  frameMax?: number; // 最大帧数(超过范围，将会自动切换成多帧模式)
   frameRate?: frameRateTypes; // 帧率
+  frameMode?: frameModeTypes; // 帧率模式
   splitCount?: number; // 多帧模式下的格子数量
 }
 
 export const mockProps = {
   total: 60,
-  frameMax: 50,
   splitCount: 5,
+  frameMode: "single" as frameModeTypes,
   width: 700,
   // height: 30,
   tickHeight: 20,
@@ -53,8 +52,8 @@ export const mockProps = {
   // tickWidth: 10,
   tipWidth: 50,
   tailWidth: 100,
-  tailColor: '#707AFF',
-  tailBgColor: '#16213E',
+  tailColor: "#707AFF",
+  tailBgColor: "#16213E",
   tailFontSize: 14,
   // markWidth: 25,
   markHeight: 20,
@@ -99,9 +98,8 @@ const timeBarStyle = (config: any) => {
 
 // 尾缀样式
 const timeBarTailStyle = (config: any) => {
-  const {
-    tailBgColor, tailColor, tailFontSize, tailWidth, tickHeight,
-  } = config;
+  const { tailBgColor, tailColor, tailFontSize, tailWidth, tickHeight } =
+    config;
 
   return {
     color: tailColor,
@@ -144,7 +142,7 @@ const renderMarkDom = (config: any) => {
       left: `${markLeft}px`,
     };
 
-    if (frameMode === 'multiple') {
+    if (frameMode === "multiple") {
       Object.assign(style, { width: `${markMiddleWidth}px` });
     }
 
@@ -160,8 +158,8 @@ const renderMarkDom = (config: any) => {
   // 提示样式
   const tipStyle = () => {
     let tipLeft = markLeft - tipWidth / 2 + (markWidth || tickWidth) / 2;
-    if (frameMode === 'multiple') {
-      tipLeft = markLeft - tipWidth / 2 + (markMiddleWidth / 2);
+    if (frameMode === "multiple") {
+      tipLeft = markLeft - tipWidth / 2 + markMiddleWidth / 2;
     }
 
     return {
@@ -177,7 +175,7 @@ const renderMarkDom = (config: any) => {
 
   // +1是因为markLeft为上一次的左侧间距,因此需要弥补。
   let tipValue = Math.ceil((markLeft + 1) / tickWidth);
-  if (frameMode === 'multiple') {
+  if (frameMode === "multiple") {
     const scale = splitCount / total;
     tipValue = Math.ceil((markLeft + 1) / (tickWidth * scale));
   }
@@ -195,20 +193,15 @@ const renderMarkDom = (config: any) => {
 };
 
 const TimeBar: React.FC<TimeBarProps> = (props) => {
-  const {
-    total, frameMax, splitCount = 20, width,
-  } = props;
+  const { total, splitCount = 20, width, frameMode: fm , markWidth , markMiddleWidth} = props;
   const contentRef = useRef<HTMLDivElement>(null);
   const markRef = useRef<HTMLDivElement>(null);
   const [markLeft, setMarkLeft] = useState(0);
   const [isMouseDown, setIsMouseDown] = useState(false);
+  const [frameMode, setFrameMode] = useState<frameModeTypes>(fm);
 
   let tickWidth = width / total;
-  let frameMode: frameModeTypes = 'single';
-  if (frameMax && total > frameMax) {
-    frameMode = "multiple";
-    tickWidth = width / splitCount;
-  }
+  if (frameMode === "multiple") tickWidth = width / splitCount;
 
   const handleMouseUp = () => {
     setIsMouseDown(false);
@@ -246,16 +239,15 @@ const TimeBar: React.FC<TimeBarProps> = (props) => {
 
   // 公共逻辑: 控制标记的鼠标事件。
   const handleMouseEventForMark = (config: any) => {
-    const {
-      e, contentRef, markRef, onSetMarkLeft, mode, frameMode,
-    } = config;
+    const { e, contentRef, markRef, onSetMarkLeft, mode, frameMode } = config;
     const { pageX: cursorLeft } = e;
     const { offsetLeft: contentLeft, offsetWidth: contentWidth } = contentRef;
     const { offsetWidth: markWidth, offsetLeft: markLeft } = markRef;
     let offsetLeft = cursorLeft - contentLeft - markWidth / 2;
 
     const isOverflowLeft = cursorLeft < contentLeft + markWidth / 2;
-    const isOverflowRight = cursorLeft > contentLeft + (contentWidth - markWidth / 2);
+    const isOverflowRight =
+      cursorLeft > contentLeft + (contentWidth - markWidth / 2);
 
     // 边界处理
     switch (mode) {
@@ -277,23 +269,98 @@ const TimeBar: React.FC<TimeBarProps> = (props) => {
     onSetMarkLeft(offsetLeft);
   };
 
+  const playSetTimeoutFnId = useRef<any>();
+  const playSetTimeoutFn = () => {
+    playSetTimeoutFnId.current = setInterval(() => {
+      setMarkLeft((prev) => {
+        console.log(prev);
+        return prev + 5;
+      });
+    }, 100);
+  };
+
+  const handlePlay = () => {
+    console.log(`handlePlay`);
+    playSetTimeoutFn();
+  };
+
+  const handlePause = () => {
+    console.log(`handlePause`);
+    clearTimeout(playSetTimeoutFnId.current);
+  };
+
+  // 一帧的宽度
+  let frameWidth = tickWidth;
+  if (frameMode === "multiple") {
+    const scale = splitCount / total;
+    frameWidth = tickWidth * scale;
+  }
+  const handleBack = () => {
+    setMarkLeft((prev) => prev - frameWidth);
+  };
+
+  const handleNext = () => {
+    console.log(markLeft)
+    console.log(frameWidth)
+    setMarkLeft((prev) => prev + frameWidth);
+  };
+
+  const handleLeftmost = ()=>{
+    setMarkLeft(0);
+  }
+
+  const handleRightmost = ()=>{
+    console.log(width , markMiddleWidth)
+    if(frameMode === 'single'){
+      return setMarkLeft(width - (markWidth || tickWidth));
+    }
+    setMarkLeft(width - markMiddleWidth);
+  }
+
   return (
     <div className="time-bar">
-      <div
-        className="time-bar-content"
-        ref={contentRef}
-        style={timeBarStyle({ ...props, tickWidth })}
-        onMouseMove={handleMouseMove}
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseLeave}
-      >
-        {renderMarkDom({
-          ...props, contentRef, frameMode, markLeft, markRef, tickWidth,
-        })}
+      {/* desc section */}
+      <div className="time-bar-desc-section">
+        <div>当前模式:{frameMode === "single" ? "单帧模式" : "多帧模式"}</div>
       </div>
-      <div className="time-bar-tail" style={timeBarTailStyle({ ...props })}>
-        {total}
+      <div className="time-bar-show-section">
+        {/* content */}
+        <div
+          className="time-bar-content"
+          ref={contentRef}
+          style={timeBarStyle({ ...props, tickWidth })}
+          onMouseMove={handleMouseMove}
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseLeave}
+        >
+          {renderMarkDom({
+            ...props,
+            contentRef,
+            frameMode,
+            markLeft,
+            markRef,
+            tickWidth,
+          })}
+        </div>
+        {/* tail */}
+        <div className="time-bar-tail" style={timeBarTailStyle({ ...props })}>
+          {total}
+        </div>
+      </div>
+      {/* control section */}
+      <div className="time-bar-control-section">
+        <Button type="link" onClick={handleBack}>{`<<`}</Button>
+        <Button type="link" onClick={handlePlay}>
+          播放
+        </Button>
+        <Button type="link" onClick={handlePause}>
+          暂停
+        </Button>
+        <Button type="link" onClick={handleNext}>{`>>`}</Button>
+        <Button type="link" onClick={handleLeftmost}>{`|<`}</Button>
+        <Button type="link" onClick={handleRightmost}>{`>|`}</Button>
+        <Button type="link"></Button>
       </div>
     </div>
   );
