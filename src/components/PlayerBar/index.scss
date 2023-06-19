@@ -1,39 +1,31 @@
-.time-bar{
+.time-bar {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.time-bar-desc-section{
+.time-bar-desc-section {
   font-size: 20px;
   padding-bottom: 5px;
+  display: flex;
+  gap: 16px;
 }
 
-.time-bar-show-section{
+.time-bar-show-section {
   // border: 1px solid brown;
   display: flex;
   align-items: end;
   justify-content: center;
 }
 
-.time-bar-control-section{
+.time-bar-control-section {
   // border: 1px solid brown;
   padding-block: 10px;
   width: fit-content;
   // margin: 0 auto;
-  button{
+  button {
     font-size: 16px;
     font-weight: 500;
-  }
-}
-
-.time-bar-wrap {
-  border: 1px solid red;
-  width: fit-content;
-  padding: 20px;
-
-  * {
-    box-sizing: border-box;
   }
 }
 
@@ -42,15 +34,11 @@
   // border: 1px solid purple;
 }
 
-.time-bar-tail{
- display: flex;
- justify-content: center;
- align-items: center;
- font-weight: 500;
-}
-
-.time-bar-btns{
-  
+.time-bar-tail {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 500;
 }
 
 .time-bar-mark {
@@ -75,5 +63,69 @@
     align-items: center;
     border-radius: 2px;
     transition: all 0.3s cubic-bezier(0.075, 0.82, 0.165, 1);
+  }
+}
+
+.frame-dropdown {
+  width: 240px;
+  background-color: white;
+  border-radius: 4px;
+  box-shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.1);
+
+  &-content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &-header {
+    height: 22px;
+    line-height: 22px;
+    color: rgba(0, 0, 0, 0.5);
+    margin-bottom: 1px;
+    padding-block: 1px;
+    padding-inline: 12px;
+  }
+
+  &-footer {
+    display: flex;
+    padding: 10px 12px;
+    padding-right: 11px;
+    gap: 11px;
+  }
+
+  &-header,
+  &-content-item {
+    position: relative;
+    display: flex;
+
+    & span:nth-child(3) {
+      position: absolute;
+      top: 2%;
+      left: 22%;
+      font-size: 12px;
+      scale: 0.95;
+      color: rgba(112, 122, 255, 1);
+    }
+
+    .key,
+    .value {
+      flex: 1;
+    }
+  }
+
+  &-content-item {
+    height: 36px;
+    line-height: 36px;
+    padding-inline: 12px;
+    font-size: 14px;
+    cursor: pointer;
+
+    &--active {
+      background-color: rgba(112, 122, 255, 0.2);
+    }
+  }
+
+  &-content-item:hover {
+    background-color: rgba(112, 122, 255, 0.2);
   }
 }

@@ -1,9 +1,9 @@
-import React, { useRef, useEffect, useState, MouseEventHandler } from "react";
-import { Button } from "antd";
+import React, { useRef, useState } from "react";
+import { Button, Select, Dropdown, Space, InputNumber, Divider } from "antd";
+import { CaretDownOutlined, DownOutlined } from "@ant-design/icons";
 import "./index.scss";
 
-// 帧率
-type frameRateTypes = 12 | 18 | 24 | 30 | 36 | 48 | 72;
+const frameOptions = [12, 18, 24, 30, 36, 48, 72];
 
 // 帧数模式
 type frameModeTypes = "single" | "multiple" | undefined;
@@ -12,6 +12,8 @@ type frameModeTypes = "single" | "multiple" | undefined;
  * 多帧模式: 一格将代表若干帧
  */
 interface TimeBarProps {
+  defaultValue?: string; // 默认值
+  total: number; // 总值
   width: number;
   height?: number;
   tickHeight: number; // 刻度线高
@@ -33,9 +35,7 @@ interface TimeBarProps {
   tailFontSize?: number; // 尾部字号
   borderBottom?: string; // 底边样式
   background?: string; // 背景色
-  defaultValue?: string; // 默认值
-  total: number; // 总值
-  frameRate?: frameRateTypes; // 帧率
+  frameRate?: number; // 帧率
   frameMode?: frameModeTypes; // 帧率模式
   splitCount?: number; // 多帧模式下的格子数量
 }
@@ -121,6 +121,7 @@ const renderMarkDom = (config: any) => {
     markMiddleColor,
     markMiddleWidth,
     markLeft,
+    tipValue,
     tipColor,
     tipFontSize,
     tipBg,
@@ -173,13 +174,6 @@ const renderMarkDom = (config: any) => {
     };
   };
 
-  // +1是因为markLeft为上一次的左侧间距,因此需要弥补。
-  let tipValue = Math.ceil((markLeft + 1) / tickWidth);
-  if (frameMode === "multiple") {
-    const scale = splitCount / total;
-    tipValue = Math.ceil((markLeft + 1) / (tickWidth * scale));
-  }
-
   return (
     <>
       <div className="time-bar-mark" ref={markRef} style={markStyle()}>
@@ -193,15 +187,33 @@ const renderMarkDom = (config: any) => {
 };
 
 const TimeBar: React.FC<TimeBarProps> = (props) => {
-  const { total, splitCount = 20, width, frameMode: fm , markWidth , markMiddleWidth} = props;
+  const {
+    total,
+    splitCount = 20,
+    width,
+    frameMode: fm,
+    markWidth,
+    markMiddleWidth,
+    frameRate = 24,
+  } = props;
   const contentRef = useRef<HTMLDivElement>(null);
   const markRef = useRef<HTMLDivElement>(null);
   const [markLeft, setMarkLeft] = useState(0);
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [frameMode, setFrameMode] = useState<frameModeTypes>(fm);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [customFrameRate, setCustomFrameRate] = useState(frameRate);
+  const [frameInput, setFrameInput] = useState<number | null>(null);
 
   let tickWidth = width / total;
   if (frameMode === "multiple") tickWidth = width / splitCount;
+
+  // +1是因为markLeft为上一次的左侧间距,因此需要弥补。
+  let tipValue = Math.ceil((markLeft + 1) / tickWidth);
+  if (frameMode === "multiple") {
+    const scale = splitCount / total;
+    tipValue = Math.ceil((markLeft + 1) / (tickWidth * scale));
+  }
 
   const handleMouseUp = () => {
     setIsMouseDown(false);
@@ -270,22 +282,27 @@ const TimeBar: React.FC<TimeBarProps> = (props) => {
   };
 
   const playSetTimeoutFnId = useRef<any>();
-  const playSetTimeoutFn = () => {
+
+  /**
+   * setTimeout最小间隔为4
+   * 目前帧数99，对应倍速4.125
+   *  / 1000 * 20 ：计算每20毫秒宽度。
+   * */
+  const multiple = customFrameRate / frameRate;
+  const gap = 20 / multiple;
+  let count = 0;
+  const handlePlay = () => {
     playSetTimeoutFnId.current = setInterval(() => {
       setMarkLeft((prev) => {
-        console.log(prev);
-        return prev + 5;
+        if (frameMode === "multiple") {
+          return prev + (width / total) / 1000 * 20;
+        }
+        return prev + ((customFrameRate * tickWidth) / 1000) * 20;
       });
-    }, 100);
-  };
-
-  const handlePlay = () => {
-    console.log(`handlePlay`);
-    playSetTimeoutFn();
+    }, gap);
   };
 
   const handlePause = () => {
-    console.log(`handlePause`);
     clearTimeout(playSetTimeoutFnId.current);
   };
 
@@ -295,33 +312,36 @@ const TimeBar: React.FC<TimeBarProps> = (props) => {
     const scale = splitCount / total;
     frameWidth = tickWidth * scale;
   }
-  const handleBack = () => {
+  const handlePrev = () => {
     setMarkLeft((prev) => prev - frameWidth);
   };
 
   const handleNext = () => {
-    console.log(markLeft)
-    console.log(frameWidth)
     setMarkLeft((prev) => prev + frameWidth);
   };
 
-  const handleLeftmost = ()=>{
+  const handleLeftmost = () => {
     setMarkLeft(0);
-  }
+  };
 
-  const handleRightmost = ()=>{
-    console.log(width , markMiddleWidth)
-    if(frameMode === 'single'){
+  const handleRightmost = () => {
+    console.log(width, markMiddleWidth);
+    if (frameMode === "single") {
       return setMarkLeft(width - (markWidth || tickWidth));
     }
     setMarkLeft(width - markMiddleWidth);
-  }
+  };
+
+  const handleframeInputChange = (value: number | null) => {
+    setFrameInput(value as number);
+  };
 
   return (
     <div className="time-bar">
       {/* desc section */}
       <div className="time-bar-desc-section">
         <div>当前模式:{frameMode === "single" ? "单帧模式" : "多帧模式"}</div>
+        <div>帧率: {customFrameRate}</div>
       </div>
       <div className="time-bar-show-section">
         {/* content */}
@@ -341,6 +361,7 @@ const TimeBar: React.FC<TimeBarProps> = (props) => {
             markLeft,
             markRef,
             tickWidth,
+            tipValue,
           })}
         </div>
         {/* tail */}
@@ -350,7 +371,7 @@ const TimeBar: React.FC<TimeBarProps> = (props) => {
       </div>
       {/* control section */}
       <div className="time-bar-control-section">
-        <Button type="link" onClick={handleBack}>{`<<`}</Button>
+        <Button type="link" onClick={handlePrev}>{`<<`}</Button>
         <Button type="link" onClick={handlePlay}>
           播放
         </Button>
@@ -361,6 +382,94 @@ const TimeBar: React.FC<TimeBarProps> = (props) => {
         <Button type="link" onClick={handleLeftmost}>{`|<`}</Button>
         <Button type="link" onClick={handleRightmost}>{`>|`}</Button>
         <Button type="link"></Button>
+        <Select
+          // onChange={handleChange}
+          defaultValue="frame"
+          suffixIcon={<CaretDownOutlined />}
+          style={{ width: 120 }}
+          options={[
+            { value: "frame", label: `${tipValue}/${total}` },
+            { value: "time", label: "12:12" },
+          ]}
+        />
+        <Dropdown
+          destroyPopupOnHide
+          trigger={["click"]}
+          overlayStyle={{ padding: 0 }}
+          overlayClassName="frame-dropdown"
+          open={dropdownOpen}
+          dropdownRender={() => {
+            return (
+              <>
+                <div className="frame-dropdown-header">
+                  <span className="key">帧率</span>
+                  <span className="value">倍率</span>
+                </div>
+                <div className="frame-dropdown-content">
+                  {frameOptions.map((fps, index) => {
+                    return (
+                      <>
+                        <div
+                          key={index}
+                          className={`frame-dropdown-content-item ${
+                            fps === customFrameRate &&
+                            "frame-dropdown-content-item--active"
+                          }`}
+                          onClick={() => {
+                            setCustomFrameRate(fps);
+                            setDropdownOpen(false);
+                          }}
+                        >
+                          <span className="key">{`${fps}fps`} </span>
+                          <span className="value">{`${fps / 24}x`}</span>
+                          {fps === frameRate && <span>原始帧率</span>}
+                        </div>
+                      </>
+                    );
+                  })}
+                </div>
+
+                <Divider style={{ marginBlock: "4px 0" }} />
+                <div className="frame-dropdown-footer">
+                  <InputNumber
+                    style={{ flex: 1 }}
+                    controls={false}
+                    value={frameInput}
+                    onChange={handleframeInputChange}
+                    min={1}
+                    max={99}
+                    placeholder="自定义帧率"
+                    onPressEnter={() => {
+                      setCustomFrameRate(frameInput as number);
+                      setDropdownOpen(false);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.keyCode === 27) setDropdownOpen(false);
+                    }}
+                    autoFocus
+                  />
+                  <Button
+                    type="link"
+                    style={{ color: "rgba(126, 135, 255, 1)" }}
+                    onClick={() => {
+                      setCustomFrameRate(frameInput as number);
+                      setDropdownOpen(false);
+                    }}
+                  >
+                    确定
+                  </Button>
+                </div>
+              </>
+            );
+          }}
+        >
+          <a onClick={() => setDropdownOpen(!dropdownOpen)}>
+            <Space>
+              选择帧率
+              <DownOutlined />
+            </Space>
+          </a>
+        </Dropdown>
       </div>
     </div>
   );
