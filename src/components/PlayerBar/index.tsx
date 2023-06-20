@@ -277,6 +277,7 @@ const PlayerBar: React.FC<PlayerBarProps> = (props) => {
     })
   );
 
+  // 帧数 | 总帧数 改变时，标尺位置变化
   useEffect(() => {
     if (currentTotal < currentFrame) {
       setCurrentFrame(currentTotal);
@@ -294,6 +295,15 @@ const PlayerBar: React.FC<PlayerBarProps> = (props) => {
       })
     );
   }, [currentFrame, currentTotal]);
+
+  // 帧数 | 总帧数 改变时，标尺位置变化
+  useEffect(() => {
+    if (currentFrameRate == frameRate) {
+      return;
+    }
+    handlePause();
+    handlePlay();
+  }, [currentFrameRate]);
 
   const handleMouseUp = () => {
     setIsMouseDown(false);
@@ -461,6 +471,7 @@ const PlayerBar: React.FC<PlayerBarProps> = (props) => {
     const { value, min, fn } = config;
     if (value === null || value === undefined) return;
     if (value < min) return;
+
     fn(value);
   };
 
@@ -535,7 +546,7 @@ const PlayerBar: React.FC<PlayerBarProps> = (props) => {
       <div className={cx("player-bar-info")}>
         <span>模式: {frameMode === "multiple" ? "多帧模式" : "单帧模式"}</span>
         <span>fps: {currentFrameRate}</span>
-        <span>倍速: {currentFrameRate / 24}x</span>
+        <span>倍速: {(currentFrameRate / 24).toFixed(2)}x</span>
         <span>
           当前帧数:{" "}
           {calculateCurrentFrame({
@@ -646,7 +657,6 @@ const PlayerBar: React.FC<PlayerBarProps> = (props) => {
                     );
                   })}
                 </div>
-
                 <Divider style={{ marginBlock: "4px 0" }} />
                 <div className={cx("frame-dropdown-footer")}>
                   <InputNumber
@@ -659,8 +669,8 @@ const PlayerBar: React.FC<PlayerBarProps> = (props) => {
                     placeholder="自定义帧率"
                     onPressEnter={() => {
                       handleBeforeConfirm({
-                        fn: setCurrentFrame,
-                        value: frameCurrentInput,
+                        fn: setCurrentFrameRate,
+                        value: frameRateInput,
                         min: 1,
                       });
                       setDropdownOpen(false);
@@ -675,8 +685,8 @@ const PlayerBar: React.FC<PlayerBarProps> = (props) => {
                     style={{ color: "rgba(126, 135, 255, 1)" }}
                     onClick={() => {
                       handleBeforeConfirm({
-                        fn: setCurrentFrame,
-                        value: frameCurrentInput,
+                        fn: setCurrentFrameRate,
+                        value: frameRateInput,
                         min: 1,
                       });
                       setDropdownOpen(false);
