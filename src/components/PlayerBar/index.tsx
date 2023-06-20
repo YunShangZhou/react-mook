@@ -1,5 +1,13 @@
-import React, { useRef, useState } from "react";
-import { Button, Select, Dropdown, Space, InputNumber, Divider } from "antd";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  Button,
+  Select,
+  Dropdown,
+  Space,
+  InputNumber,
+  Divider,
+  Input,
+} from "antd";
 import { CaretDownOutlined, DownOutlined } from "@ant-design/icons";
 import "./index.scss";
 
@@ -11,8 +19,8 @@ type frameModeTypes = "single" | "multiple" | undefined;
 /**
  * 多帧模式: 一格将代表若干帧
  */
-interface TimeBarProps {
-  defaultValue?: string; // 默认值
+interface PlayerBarProps {
+  defaultValue: number; // 默认值
   total: number; // 总值
   width: number;
   height?: number;
@@ -42,6 +50,7 @@ interface TimeBarProps {
 
 export const mockProps = {
   total: 60,
+  defaultValue: 20,
   splitCount: 5,
   frameMode: "single" as frameModeTypes,
   width: 700,
@@ -65,7 +74,7 @@ export const mockProps = {
 };
 
 // 进度条样式
-const timeBarStyle = (config: any) => {
+const playerBarStyle = (config: any) => {
   const {
     width,
     height,
@@ -97,7 +106,7 @@ const timeBarStyle = (config: any) => {
 };
 
 // 尾缀样式
-const timeBarTailStyle = (config: any) => {
+const playerBarTailStyle = (config: any) => {
   const { tailBgColor, tailColor, tailFontSize, tailWidth, tickHeight } =
     config;
 
@@ -121,14 +130,13 @@ const renderMarkDom = (config: any) => {
     markMiddleColor,
     markMiddleWidth,
     markLeft,
-    tipValue,
     tipColor,
     tipFontSize,
     tipBg,
     tipWidth,
     markRef,
     frameMode,
-    total,
+    currentTotal,
     splitCount = 20,
   } = config;
 
@@ -174,21 +182,70 @@ const renderMarkDom = (config: any) => {
     };
   };
 
+  const tipValue = calculateCurrentFrame({
+    markLeft,
+    tickWidth,
+    splitCount,
+    frameMode,
+    currentTotal,
+  });
+
   return (
     <>
-      <div className="time-bar-mark" ref={markRef} style={markStyle()}>
-        <div className="time-bar-mark-middle" style={middleStyle} />
+      <div className="player-bar-mark" ref={markRef} style={markStyle()}>
+        <div className="player-bar-mark-middle" style={middleStyle} />
       </div>
-      <div className="time-bar-mark-tip" style={tipStyle()}>
+      <div className="player-bar-mark-tip" style={tipStyle()}>
         {tipValue || "1"}
       </div>
     </>
   );
 };
 
-const TimeBar: React.FC<TimeBarProps> = (props) => {
+// 根据当前帧数计算标尺左侧距离
+const calculateMarkLeft = (config: any) => {
+  const {
+    frameMode,
+    currentTotal,
+    splitCount,
+    width,
+    tickWidth,
+    currentFrame,
+    markMiddleWidth,
+  } = config;
+
+  let markLeft;
+  markLeft = (currentFrame - 1) * tickWidth;
+  if (frameMode === "multiple") {
+    const scale = splitCount / currentTotal;
+
+    if (currentFrame === currentTotal) {
+      markLeft = width - markMiddleWidth;
+    }
+    markLeft = (currentFrame - 1) * (tickWidth * scale);
+  }
+
+  return markLeft;
+};
+
+// 根据标尺左侧距离計算当前帧数
+const calculateCurrentFrame = (config: any) => {
+  const { markLeft, frameMode, splitCount, currentTotal, tickWidth } = config;
+  let currentFrame;
+
+  currentFrame = Math.ceil((markLeft + 1) / tickWidth);
+  if (frameMode === "multiple") {
+    const scale = splitCount / currentTotal;
+    currentFrame = Math.ceil((markLeft + 1) / (tickWidth * scale));
+  }
+
+  return currentFrame;
+};
+
+const PlayerBar: React.FC<PlayerBarProps> = (props) => {
   const {
     total,
+    defaultValue,
     splitCount = 20,
     width,
     frameMode: fm,
@@ -198,22 +255,62 @@ const TimeBar: React.FC<TimeBarProps> = (props) => {
   } = props;
   const contentRef = useRef<HTMLDivElement>(null);
   const markRef = useRef<HTMLDivElement>(null);
-  const [markLeft, setMarkLeft] = useState(0);
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [frameMode, setFrameMode] = useState<frameModeTypes>(fm);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [customFrameRate, setCustomFrameRate] = useState(frameRate);
-  const [frameInput, setFrameInput] = useState<number | null>(null);
 
-  let tickWidth = width / total;
+  const [currentTotal, setCurrentTotal] = useState(total);
+  const [currentFrame, setCurrentFrame] = useState(defaultValue);
+
+  const [frameRateInput, setFrameRateInput] = useState<number | null>(null);
+  const [frameTotalInput, setFrameTotalInput] = useState<number | null>(null);
+  const [frameCurrentInput, setFrameCurrentInput] = useState<number | null>(
+    null
+  );
+
+  let tickWidth = width / currentTotal;
   if (frameMode === "multiple") tickWidth = width / splitCount;
 
-  // +1是因为markLeft为上一次的左侧间距,因此需要弥补。
-  let tipValue = Math.ceil((markLeft + 1) / tickWidth);
-  if (frameMode === "multiple") {
-    const scale = splitCount / total;
-    tipValue = Math.ceil((markLeft + 1) / (tickWidth * scale));
-  }
+  const [markLeft, setMarkLeft] = useState(
+    calculateMarkLeft({
+      currentFrame,
+      tickWidth,
+      splitCount,
+      frameMode,
+      currentTotal,
+      markMiddleWidth,
+      width
+    })
+  );
+
+  // calculateCurrentFrame({
+  //   markLeft,
+  //   tickWidth,
+  //   splitCount,
+  //   frameMode,
+  //   currentTotal,
+  // })
+
+  useEffect(() => {
+    if (currentTotal < currentFrame) {
+      setCurrentFrame(currentTotal);
+      console.log(111);
+      return;
+    }
+    console.log(222);
+    setMarkLeft(
+      calculateMarkLeft({
+        currentFrame,
+        tickWidth,
+        splitCount,
+        frameMode,
+        currentTotal,
+        markMiddleWidth,
+        width
+      })
+    );
+  }, [currentFrame, currentTotal]);
 
   const handleMouseUp = () => {
     setIsMouseDown(false);
@@ -284,40 +381,59 @@ const TimeBar: React.FC<TimeBarProps> = (props) => {
   const playSetTimeoutFnId = useRef<any>();
 
   /**
-   * setTimeout最小间隔为4
+   * setTimeout最小间隔为4ms
    * 目前帧数99，对应倍速4.125
-   *  / 1000 * 20 ：计算每20毫秒宽度。
+   * / 1000 * 20 ：计算每20ms宽度。
    * */
   const multiple = customFrameRate / frameRate;
   const gap = 20 / multiple;
-  let count = 0;
+  const gapWidth =
+    ((frameMode === "multiple"
+      ? (customFrameRate * tickWidth * splitCount) / currentTotal
+      : customFrameRate * tickWidth) /
+      1000) *
+    20;
+
   const handlePlay = () => {
+    if (playSetTimeoutFnId.current) return;
+
     playSetTimeoutFnId.current = setInterval(() => {
       setMarkLeft((prev) => {
-        if (frameMode === "multiple") {
-          return prev + (width / total) / 1000 * 20;
-        }
-        return prev + ((customFrameRate * tickWidth) / 1000) * 20;
+        if (prev >= width - gapWidth) return 0;
+        return prev + gapWidth;
       });
     }, gap);
   };
 
   const handlePause = () => {
     clearTimeout(playSetTimeoutFnId.current);
+    playSetTimeoutFnId.current = null;
   };
 
   // 一帧的宽度
   let frameWidth = tickWidth;
   if (frameMode === "multiple") {
-    const scale = splitCount / total;
+    const scale = splitCount / currentTotal;
     frameWidth = tickWidth * scale;
   }
   const handlePrev = () => {
-    setMarkLeft((prev) => prev - frameWidth);
+    setMarkLeft((prev) => {
+      if (prev - frameWidth < 0) {
+        return 0;
+      }
+      return prev - frameWidth;
+    });
   };
 
   const handleNext = () => {
-    setMarkLeft((prev) => prev + frameWidth);
+    setMarkLeft((prev) => {
+      if (prev + frameWidth >= width) {
+        return (
+          width - (frameMode === "multiple" ? markMiddleWidth : frameWidth)
+        );
+      }
+      return prev + frameWidth;
+    });
   };
 
   const handleLeftmost = () => {
@@ -325,30 +441,91 @@ const TimeBar: React.FC<TimeBarProps> = (props) => {
   };
 
   const handleRightmost = () => {
-    console.log(width, markMiddleWidth);
     if (frameMode === "single") {
       return setMarkLeft(width - (markWidth || tickWidth));
     }
     setMarkLeft(width - markMiddleWidth);
   };
 
-  const handleframeInputChange = (value: number | null) => {
-    setFrameInput(value as number);
+  // 帧率
+  const handleframeRateInputChange = (value: number | null) => {
+    setFrameRateInput(value as number);
+  };
+
+  // 总帧数
+  const handleframeTotalInputChange = (value: number | null) => {
+    setFrameTotalInput(value as number);
+  };
+
+  // 当前帧数
+  const handleframeCurrentInputChange = (value: number | null) => {
+    setFrameCurrentInput(value as number);
   };
 
   return (
-    <div className="time-bar">
-      {/* desc section */}
-      <div className="time-bar-desc-section">
-        <div>当前模式:{frameMode === "single" ? "单帧模式" : "多帧模式"}</div>
-        <div>帧率: {customFrameRate}</div>
+    <div className="player-bar">
+      <div className="player-bar-setting">
+        <div className="player-bar-setting-item">
+          <span>设置总帧数:</span>
+          <InputNumber
+            style={{ width: "200px" }}
+            controls={false}
+            value={frameTotalInput}
+            onChange={handleframeTotalInputChange}
+            placeholder="请输入总帧数"
+            min={2}
+            onPressEnter={() => setCurrentTotal(frameTotalInput as number)}
+          />
+          <Button
+            type="link"
+            onClick={() => setCurrentTotal(frameTotalInput as number)}
+          >
+            确定
+          </Button>
+        </div>
+
+        <div className="player-bar-setting-item">
+          <span>设置当前帧数:</span>
+          <InputNumber
+            style={{ width: "200px" }}
+            controls={false}
+            value={frameCurrentInput}
+            onChange={handleframeCurrentInputChange}
+            placeholder="请输入当前帧数"
+            min={1}
+            max={total}
+            onPressEnter={() => setCurrentFrame(frameCurrentInput as number)}
+          />
+          <Button
+            type="link"
+            onClick={() => setCurrentFrame(frameCurrentInput as number)}
+          >
+            确定
+          </Button>
+        </div>
       </div>
-      <div className="time-bar-show-section">
+      {/* info */}
+      <div className="player-bar-info">
+        <span>模式: {frameMode === "multiple" ? "多帧模式" : "单帧模式"}</span>
+        <span>fps: {frameRate}</span>
+        <span>倍速: {customFrameRate / frameRate}x</span>
+        <span>
+          当前帧数:{" "}
+          {calculateCurrentFrame({
+            markLeft,
+            tickWidth,
+            splitCount,
+            frameMode,
+            currentTotal,
+          })}
+        </span>
+      </div>
+      <div className="player-bar-show">
         {/* content */}
         <div
-          className="time-bar-content"
+          className="player-bar-content"
           ref={contentRef}
-          style={timeBarStyle({ ...props, tickWidth })}
+          style={playerBarStyle({ ...props, tickWidth })}
           onMouseMove={handleMouseMove}
           onMouseDown={handleMouseDown}
           onMouseUp={handleMouseUp}
@@ -361,16 +538,19 @@ const TimeBar: React.FC<TimeBarProps> = (props) => {
             markLeft,
             markRef,
             tickWidth,
-            tipValue,
+            currentFrame,
+            currentTotal,
           })}
         </div>
         {/* tail */}
-        <div className="time-bar-tail" style={timeBarTailStyle({ ...props })}>
-          {total}
+        <div
+          className="player-bar-tail"
+          style={playerBarTailStyle({ ...props })}
+        >
+          {currentTotal}
         </div>
       </div>
-      {/* control section */}
-      <div className="time-bar-control-section">
+      <div className="player-bar-control">
         <Button type="link" onClick={handlePrev}>{`<<`}</Button>
         <Button type="link" onClick={handlePlay}>
           播放
@@ -388,7 +568,16 @@ const TimeBar: React.FC<TimeBarProps> = (props) => {
           suffixIcon={<CaretDownOutlined />}
           style={{ width: 120 }}
           options={[
-            { value: "frame", label: `${tipValue}/${total}` },
+            {
+              value: "frame",
+              label: `${calculateCurrentFrame({
+                markLeft,
+                tickWidth,
+                splitCount,
+                frameMode,
+                currentTotal,
+              })}/${currentTotal}`,
+            },
             { value: "time", label: "12:12" },
           ]}
         />
@@ -408,23 +597,21 @@ const TimeBar: React.FC<TimeBarProps> = (props) => {
                 <div className="frame-dropdown-content">
                   {frameOptions.map((fps, index) => {
                     return (
-                      <>
-                        <div
-                          key={index}
-                          className={`frame-dropdown-content-item ${
-                            fps === customFrameRate &&
-                            "frame-dropdown-content-item--active"
-                          }`}
-                          onClick={() => {
-                            setCustomFrameRate(fps);
-                            setDropdownOpen(false);
-                          }}
-                        >
-                          <span className="key">{`${fps}fps`} </span>
-                          <span className="value">{`${fps / 24}x`}</span>
-                          {fps === frameRate && <span>原始帧率</span>}
-                        </div>
-                      </>
+                      <div
+                        key={index}
+                        className={`frame-dropdown-content-item ${
+                          fps === customFrameRate &&
+                          "frame-dropdown-content-item--active"
+                        }`}
+                        onClick={() => {
+                          setCustomFrameRate(fps);
+                          setDropdownOpen(false);
+                        }}
+                      >
+                        <span className="key">{`${fps}fps`} </span>
+                        <span className="value">{`${fps / 24}x`}</span>
+                        {fps === frameRate && <span>原始帧率</span>}
+                      </div>
                     );
                   })}
                 </div>
@@ -434,13 +621,13 @@ const TimeBar: React.FC<TimeBarProps> = (props) => {
                   <InputNumber
                     style={{ flex: 1 }}
                     controls={false}
-                    value={frameInput}
-                    onChange={handleframeInputChange}
+                    value={frameRateInput}
+                    onChange={handleframeRateInputChange}
                     min={1}
                     max={99}
                     placeholder="自定义帧率"
                     onPressEnter={() => {
-                      setCustomFrameRate(frameInput as number);
+                      setCustomFrameRate(frameRateInput as number);
                       setDropdownOpen(false);
                     }}
                     onKeyDown={(e) => {
@@ -452,7 +639,7 @@ const TimeBar: React.FC<TimeBarProps> = (props) => {
                     type="link"
                     style={{ color: "rgba(126, 135, 255, 1)" }}
                     onClick={() => {
-                      setCustomFrameRate(frameInput as number);
+                      setCustomFrameRate(frameRateInput as number);
                       setDropdownOpen(false);
                     }}
                   >
@@ -475,4 +662,4 @@ const TimeBar: React.FC<TimeBarProps> = (props) => {
   );
 };
 
-export default TimeBar;
+export default PlayerBar;

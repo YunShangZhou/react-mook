@@ -1,24 +1,40 @@
-.time-bar {
+.player-bar {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.time-bar-desc-section {
+.player-bar-setting {
+  margin-bottom: 55px;
+  display: flex;
+  gap: 10px;
+
+  &-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    & > span:nth-child(1) {
+      min-width: 100px;
+    }
+  }
+}
+
+.player-bar-info {
   font-size: 20px;
   padding-bottom: 5px;
   display: flex;
-  gap: 16px;
+  gap: 64px;
 }
 
-.time-bar-show-section {
+.player-bar-show {
   // border: 1px solid brown;
   display: flex;
   align-items: end;
   justify-content: center;
 }
 
-.time-bar-control-section {
+.player-bar-control {
   // border: 1px solid brown;
   padding-block: 10px;
   width: fit-content;
@@ -29,19 +45,19 @@
   }
 }
 
-.time-bar-content {
+.player-bar-content {
   position: relative;
   // border: 1px solid purple;
 }
 
-.time-bar-tail {
+.player-bar-tail {
   display: flex;
   justify-content: center;
   align-items: center;
   font-weight: 500;
 }
 
-.time-bar-mark {
+.player-bar-mark {
   position: absolute;
   cursor: pointer;
   display: flex;
