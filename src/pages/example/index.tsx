@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import PlayerBar, { mockProps } from "../../components/PlayerBar/index";
+import PlayerBar, { mockProps } from "../../components/PlayerBar";
 import "./style.scss";
 
 class ExamplePage extends Component {
