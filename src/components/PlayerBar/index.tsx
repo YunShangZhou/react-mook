@@ -296,7 +296,7 @@ const PlayerBar: React.FC<PlayerBarProps> = (props) => {
     );
   }, [currentFrame, currentTotal]);
 
-  // 帧数 | 总帧数 改变时，标尺位置变化
+  // 帧率 改变时，标尺速率变化
   useEffect(() => {
     if (currentFrameRate == frameRate) {
       return;
