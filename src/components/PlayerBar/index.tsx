@@ -246,6 +246,8 @@ const PlayerBar: React.FC<PlayerBarProps> = (props) => {
     markMiddleWidth,
     frameRate = 24,
   } = props;
+  const [firstLoad, setFirstLoad] = useState(true);
+
   const contentRef = useRef<HTMLDivElement>(null);
   const markRef = useRef<HTMLDivElement>(null);
   const [isMouseDown, setIsMouseDown] = useState(false);
@@ -298,7 +300,8 @@ const PlayerBar: React.FC<PlayerBarProps> = (props) => {
 
   // 帧率 改变时，标尺速率变化
   useEffect(() => {
-    if (currentFrameRate == frameRate) {
+    if (currentFrameRate == frameRate && firstLoad) {
+      setFirstLoad(false);
       return;
     }
     handlePause();

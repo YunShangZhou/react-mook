@@ -1,18 +1,25 @@
-import React, { Component } from "react";
-import PlayerBar, { mockProps } from "../../components/PlayerBar";
-import "./style.scss";
+import React from 'react';
+import classNames from 'classnames/bind';
+import PlayerBar, { mockProps } from '../../components/PlayerBar';
+import styles from './index.module.css';
 
-class ExamplePage extends Component {
-  render() {
-    return (
-      <div className="example-page">
-        <PlayerBar {...mockProps} />
-        <br />
-        <br />
-        <PlayerBar {...mockProps} frameMode="multiple" />
-      </div>
-    );
-  }
-}
+const cx = classNames.bind(styles);
+
+const ExamplePage = () => {
+  return (
+    <div className={cx('example-page')}>
+      <PlayerBar {...mockProps} />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      {/* <PlayerBar {...mockProps} frameMode="multiple" /> */}
+    </div>
+  );
+};
 
 export default ExamplePage;
