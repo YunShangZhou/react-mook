@@ -22,11 +22,11 @@ const ExamplePage = () => {
         parentWidth={size?.width as number}
         {...requiredDefaultProps}
       />
-      <PlayerBar
+      {/* <PlayerBar
         parentWidth={size?.width as number}
         {...requiredDefaultProps}
         frameMode="multiple"
-      />
+      /> */}
     </div>
   );
 };

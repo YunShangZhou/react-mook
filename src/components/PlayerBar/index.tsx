@@ -32,7 +32,7 @@ interface PlayerBarProps {
   tipFontSize?: string; // 提示字号
   tipBg?: string; // 提示背景色
   tipWidth?: number; // 提示宽度
-  tailWidth?: number; // 尾部宽度(百分比)
+  tailWidthPercent?: number; // 尾部宽度(百分比)
   tailColor?: string; // 尾部字体色
   tailBgColor?: string; // 尾部背景色
   tailFontSize?: number; // 尾部字号
@@ -59,7 +59,7 @@ export const optionalDefaultProps = {
   tipFontSize: 12,
   tipColor: "white",
   tipBg: "rgba(63, 87, 112, 1)",
-  tailWidth: 10,
+  tailWidthPercent: 10,
   tailColor: "#707AFF",
   tailBgColor: "#16213E",
   tailFontSize: 14,
@@ -103,14 +103,14 @@ const playerBarStyle = (config: any) => {
 
 // 尾缀样式
 const playerBarTailStyle = (config: any) => {
-  const { tailBgColor, tailColor, tailFontSize, tailWidth, tickHeight } =
+  const { tailBgColor, tailColor, tailFontSize, tailWidthPercent, tickHeight } =
     config;
 
   return {
     color: tailColor,
     backgroundColor: tailBgColor,
     fontSize: `${tailFontSize}px`,
-    width: `${tailWidth}%`,
+    width: `${tailWidthPercent}%`,
     height: `${tickHeight}px`,
   };
 };
@@ -248,10 +248,8 @@ const PlayerBar: React.FC<PlayerBarProps> = (props) => {
     markMiddleWidth,
     frameRate = 24,
     parentWidth: size,
-    tailWidth,
+    tailWidthPercent,
   } = conbineProps;
-
-  const [firstLoad, setFirstLoad] = useState(true);
 
   const contentRef = useRef<HTMLDivElement>(null);
   const markRef = useRef<HTMLDivElement>(null);
@@ -274,7 +272,7 @@ const PlayerBar: React.FC<PlayerBarProps> = (props) => {
   const [parentWidth, setParentWidth] = useState(1000);
 
   useEffect(() => {
-    const scale = (100 - tailWidth) / 100;
+    const scale = (100 - tailWidthPercent) / 100;
     setParentWidth(size * scale);
   }, [size]);
 
