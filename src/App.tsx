@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "antd";
 import "./style.scss";
 import { get } from "./utils/request";
-import TimeBar, { mockProps } from "./components/PlayerBar";
 
 const App: React.FC = (props: PropsWithChildren) => {
   const { children } = props;
@@ -45,7 +44,6 @@ const App: React.FC = (props: PropsWithChildren) => {
       <Button type="primary" ghost onClick={handleGetYapiGray}>
         获取user
       </Button>
-      <TimeBar {...mockProps} />
     </div>
   );
 };
