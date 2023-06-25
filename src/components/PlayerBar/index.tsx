@@ -96,14 +96,7 @@ export const defaultProps = {
 };
 
 const playerBarStyle = (config: any) => {
-  const {
-    height,
-    tickHeight,
-    tickWidth,
-    tickColorBgOdd,
-    tickColorBgEven,
-    barWidth,
-  } = config;
+  const { height, tickHeight, tickWidth, tickColorBgOdd, tickColorBgEven, barWidth } = config;
 
   return {
     height: `${height || tickHeight * 2}px`,
@@ -134,14 +127,7 @@ const playerBarTailStyle = (config: any) => {
 };
 
 const markStyle = (config: any) => {
-  const {
-    tickWidth,
-    tickHeight,
-    markColorBg,
-    markLeft,
-    frameMode,
-    markMiddleWidth,
-  } = config;
+  const { tickWidth, tickHeight, markColorBg, markLeft, frameMode, markMiddleWidth } = config;
   const style = {
     height: `${tickHeight}px`,
     width: `${tickWidth}px`,
@@ -151,7 +137,7 @@ const markStyle = (config: any) => {
     left: `${markLeft}px`,
   };
 
-  if (frameMode === "multiple") {
+  if (frameMode === 'multiple') {
     Object.assign(style, { width: `${markMiddleWidth}px` });
   }
 
@@ -168,20 +154,11 @@ const middleStyle = (config: any) => {
 };
 
 const tipStyle = (config: any) => {
-  const {
-    markLeft,
-    tipWidth,
-    tickWidth,
-    frameMode,
-    markMiddleWidth,
-    tipFontSize,
-    tipColor,
-    tipBg,
-    tickHeight,
-  } = config;
+  const { markLeft, tipWidth, tickWidth, frameMode, markMiddleWidth, tipFontSize, tipColor, tipBg, tickHeight } =
+    config;
 
   let tipLeft = markLeft - tipWidth / 2 + tickWidth / 2;
-  if (frameMode === "multiple") {
+  if (frameMode === 'multiple') {
     tipLeft = markLeft - tipWidth / 2 + markMiddleWidth / 2;
   }
 
@@ -206,40 +183,22 @@ const renderMarkDom = (config: any) => {
 
   return (
     <>
-      <div
-        className={cx("player-bar-mark")}
-        ref={markRef}
-        style={markStyle({ ...config })}
-      >
-        <div
-          className={cx("player-bar-mark-middle")}
-          style={middleStyle({ ...config })}
-        />
+      <div className={cx('player-bar-mark')} ref={markRef} style={markStyle({ ...config })}>
+        <div className={cx('player-bar-mark-middle')} style={middleStyle({ ...config })} />
       </div>
-      <div
-        className={cx("player-bar-mark-tip")}
-        style={tipStyle({ ...config })}
-      >
-        {tipValue || "1"}
+      <div className={cx('player-bar-mark-tip')} style={tipStyle({ ...config })}>
+        {tipValue || '1'}
       </div>
     </>
   );
 };
 
 const calculateMarkLeft = (config: any) => {
-  const {
-    frameMode,
-    frameTotal,
-    splitCount,
-    barWidth,
-    tickWidth,
-    frameIndex,
-    markMiddleWidth,
-  } = config;
+  const { frameMode, frameTotal, splitCount, barWidth, tickWidth, frameIndex, markMiddleWidth } = config;
 
   let markLeft;
   markLeft = (frameIndex - 1) * tickWidth;
-  if (frameMode === "multiple") {
+  if (frameMode === 'multiple') {
     const scale = splitCount / frameTotal;
 
     if (frameIndex === frameTotal) {
@@ -256,7 +215,7 @@ const calculateFrameIndex = (config: any) => {
   let frameIndex;
 
   frameIndex = Math.ceil((markLeft + 1) / tickWidth);
-  if (frameMode === "multiple") {
+  if (frameMode === 'multiple') {
     const scale = splitCount / frameTotal;
     frameIndex = Math.ceil((markLeft + 1) / (tickWidth * scale));
   }
@@ -305,16 +264,17 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
   const [isLoop, setIsLoop] = useState(true);
 
   let tickWidth = Number((barWidth / frameTotal).toFixed(2));
-  if (frameMode === "multiple") tickWidth = Math.ceil(barWidth / splitCount);
+  if (frameMode === 'multiple') tickWidth = Math.ceil(barWidth / splitCount);
 
   // 一帧的宽度
   let frameWidth = tickWidth;
-  if (frameMode === "multiple") {
+  if (frameMode === 'multiple') {
     const scale = splitCount / frameTotal;
     frameWidth = tickWidth * scale;
   }
 
-  const calculateConfig = {
+  const commonConfig = {
+    contentRef,
     tickWidth,
     splitCount,
     frameMode,
@@ -322,12 +282,11 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
     frameIndex,
     markMiddleWidth,
     barWidth,
+    markRef,
   };
 
-  const [markLeft, setMarkLeft] = useState(
-    calculateMarkLeft({ ...calculateConfig })
-  );
-  Object.assign(calculateConfig, { markLeft });
+  const [markLeft, setMarkLeft] = useState(calculateMarkLeft({ ...commonConfig }));
+  Object.assign(commonConfig, { markLeft });
 
   useEffect(() => {
     onLoad();
@@ -349,7 +308,7 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
       onSetFrameIndex(frameTotal);
       return;
     }
-    setMarkLeft(calculateMarkLeft({ ...calculateConfig }));
+    setMarkLeft(calculateMarkLeft({ ...commonConfig }));
   }, [frameIndex, frameTotal, barWidth]);
 
   // 帧率 改变时，标尺速率变化
@@ -549,26 +508,19 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
                 frameIndex: frameCurrentInput,
                 min: 1,
               })
-            }
-          >
+            }>
             确定
           </Button>
         </div>
       </div>
       {/* info */}
-      <div className={cx("player-bar-info")}>
-        <span>模式: {frameMode === "multiple" ? "多帧模式" : "单帧模式"}</span>
+      <div className={cx('player-bar-info')}>
+        <span>模式: {frameMode === 'multiple' ? '多帧模式' : '单帧模式'}</span>
         <span>fps: {frameRate}</span>
         <span>倍速: {(frameRate / 24).toFixed(2)}x</span>
         <span>
           当前帧数:
-          {calculateFrameIndex({
-            markLeft,
-            tickWidth,
-            splitCount,
-            frameMode,
-            frameTotal,
-          })}
+          {calculateFrameIndex({ ...commonConfig })}
         </span>
       </div>
       <div className={cx('player-bar-show')}>
@@ -581,16 +533,7 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
           onMouseDown={handleMouseDown}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseLeave}>
-          {renderMarkDom({
-            ...conbineProps,
-            contentRef,
-            frameMode,
-            markLeft,
-            markRef,
-            tickWidth,
-            frameIndex,
-            frameTotal,
-          })}
+          {renderMarkDom({ ...conbineProps, ...commonConfig })}
         </div>
         {/* tail */}
         <div className={cx('player-bar-tail')} style={playerBarTailStyle({ ...conbineProps })}>
@@ -615,13 +558,9 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
           style={{ width: 120 }}
           options={[
             {
-              value: "frame",
+              value: 'frame',
               label: `${calculateFrameIndex({
-                markLeft,
-                tickWidth,
-                splitCount,
-                frameMode,
-                frameTotal,
+                ...commonConfig,
               })}/${frameTotal}`,
             },
             { value: 'time', label: '12:12' },
