@@ -14,19 +14,24 @@ type frameModeTypes = 'single' | 'multiple' | undefined;
 
 interface PlayerBarCallbackProps {
   onSetValue: (frameIndex: any) => void;
+  onSetTotal: (total: any) => void;
+  onSetFrameRate: (frameRate: any) => void;
   onLoad?: () => void;
   onStart?: (loop: boolean) => void;
   onPause?: () => void;
   onPlaybackRateChange?: () => void;
   seekToFrame?: (frameIndex: number) => void;
+  onTotalChange?: (total: number) => void;
+  onFrameRateChange?: (frameRate: number) => void;
 }
 
 interface PlayerBarOriginalProps {
   value: number; // 默认值
   total: number; // 总值
-  splitCount: number; // 多帧模式下的格子数量
+  frameRate: number; // 帧率
+  originalFrameRate?: frameOptionsType; // 原始帧率
+  splitCount?: number; // 多帧模式下的格子数量
   frameMode?: frameModeTypes; // 帧率模式: 单帧(格/帧) | 多帧(格/n帧)
-  frameRate?: frameOptionsType; // 帧率
   height?: number;
   tickHeight?: number; // 刻度线高
   tickColorOdd?: string; // 刻度线颜色(奇数格)
@@ -51,14 +56,15 @@ type PlayerBarProps = PlayerBarCallbackProps & PlayerBarOriginalProps;
 export const requiredDefaultProps = {
   total: 60,
   value: 20,
-  splitCount: 5,
+  frameRate: 48,
 };
 
 // 选填属性
 export const optionalDefaultProps = {
   // width: '100%',
+  splitCount: 20,
   frameMode: 'single' as frameModeTypes,
-  frameRate: 72 as frameOptionsType,
+  originalFrameRate: 24,
   height: 120,
   tickHeight: 20,
   tickColorOdd: '#3F5770',
@@ -79,6 +85,8 @@ export const optionalDefaultProps = {
   onPause: () => {},
   onPlaybackRateChange: () => {},
   seekToFrame: (frameIndex: number) => {},
+  onTotalChange: () => {},
+  onFrameRateChange: () => {},
 };
 
 // 默认属性
@@ -135,7 +143,7 @@ const renderMarkDom = (config: any) => {
     tipWidth,
     markRef,
     frameMode,
-    currentTotal,
+    total,
     splitCount = 20,
   } = config;
 
@@ -186,7 +194,7 @@ const renderMarkDom = (config: any) => {
     tickWidth,
     splitCount,
     frameMode,
-    currentTotal,
+    total,
   });
 
   return (
@@ -203,14 +211,14 @@ const renderMarkDom = (config: any) => {
 
 // 根据当前帧数计算标尺左侧距离
 const calculateMarkLeft = (config: any) => {
-  const { frameMode, currentTotal, splitCount, parentWidth, tickWidth, value, markMiddleWidth } = config;
+  const { frameMode, total, splitCount, parentWidth, tickWidth, value, markMiddleWidth } = config;
 
   let markLeft;
   markLeft = (value - 1) * tickWidth;
   if (frameMode === 'multiple') {
-    const scale = splitCount / currentTotal;
+    const scale = splitCount / total;
 
-    if (value === currentTotal) {
+    if (value === total) {
       markLeft = parentWidth - markMiddleWidth;
     }
     markLeft = (value - 1) * (tickWidth * scale);
@@ -221,12 +229,12 @@ const calculateMarkLeft = (config: any) => {
 
 // 根据标尺左侧距离计算当前帧数
 const calculatevalue = (config: any) => {
-  const { markLeft, frameMode, splitCount, currentTotal, tickWidth } = config;
+  const { markLeft, frameMode, splitCount, total, tickWidth } = config;
   let value;
 
   value = Math.ceil((markLeft + 1) / tickWidth);
   if (frameMode === 'multiple') {
-    const scale = splitCount / currentTotal;
+    const scale = splitCount / total;
     value = Math.ceil((markLeft + 1) / (tickWidth * scale));
   }
 
@@ -243,15 +251,18 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
     splitCount = 20,
     frameMode: fm,
     markMiddleWidth,
-    frameRate = 24,
+    originalFrameRate,
+    frameRate,
     parentWidth: size,
     tailWidthPercent,
+    onSetValue,
+    onSetTotal,
+    onSetFrameRate,
     onLoad,
     onStart,
     onPause,
     onPlaybackRateChange,
     seekToFrame,
-    onSetValue,
   } = conbineProps;
 
   const contentRef = useRef<HTMLDivElement>(null);
@@ -259,9 +270,6 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [frameMode, setFrameMode] = useState<frameModeTypes>(fm);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [valueRate, onSetValueRate] = useState(frameRate as number);
-
-  const [currentTotal, setCurrentTotal] = useState(total);
 
   const [frameRateInput, setFrameRateInput] = useState<number | null>(null);
   const [frameTotalInput, setFrameTotalInput] = useState<number | null>(null);
@@ -274,16 +282,13 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
   const [loading, isLoading] = useState(!!onLoad);
   const [isLoop, setIsLoop] = useState(true);
 
-
-  let tickWidth = Number((parentWidth / currentTotal).toFixed(2));
+  let tickWidth = Number((parentWidth / total).toFixed(2));
   if (frameMode === 'multiple') tickWidth = Math.ceil(parentWidth / splitCount);
-
-  console.log(`parentWidth,currentTotal,tickWidth`,parentWidth,currentTotal,tickWidth)
 
   // 一帧的宽度
   let frameWidth = tickWidth;
   if (frameMode === 'multiple') {
-    const scale = splitCount / currentTotal;
+    const scale = splitCount / total;
     frameWidth = tickWidth * scale;
   }
 
@@ -293,14 +298,19 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
       tickWidth,
       splitCount,
       frameMode,
-      currentTotal,
+      total,
       markMiddleWidth,
       parentWidth,
     })
   );
 
-  // 加载钩子
-  useEffect(() => {}, [onLoad]);
+  useEffect(() => {
+    onLoad();
+  }, [onLoad]);
+
+  useEffect(() => {
+    seekToFrame(value);
+  }, [value]);
 
   // 父元素宽度变化
   useEffect(() => {
@@ -310,8 +320,8 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
 
   // 帧数 | 总帧数 改变时，标尺位置变化
   useEffect(() => {
-    if (currentTotal < value) {
-      onSetValue(currentTotal);
+    if (total < value) {
+      onSetValue(total);
       return;
     }
     setMarkLeft(
@@ -320,12 +330,12 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
         tickWidth,
         splitCount,
         frameMode,
-        currentTotal,
+        total,
         markMiddleWidth,
         parentWidth,
       })
     );
-  }, [value, currentTotal, parentWidth]);
+  }, [value, total, parentWidth]);
 
   // 帧率 改变时，标尺速率变化
   useEffect(() => {
@@ -334,7 +344,7 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
     if (isPause) return;
     handlePause();
     handlePlay();
-  }, [valueRate, currentTotal]);
+  }, [frameRate, total]);
 
   const handleMouseUp = () => {
     setIsMouseDown(false);
@@ -373,7 +383,7 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
           return;
         }
         if (isOverflowRight) {
-          onSetValue(currentTotal);
+          onSetValue(total);
           return;
         }
     }
@@ -395,8 +405,8 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
     playSetTimeoutFnId.current = setInterval(() => {
       setIsPause(false);
       onSetValue((prev: number) => {
-        console.log(`prev currentTotal`, prev, currentTotal);
-        if (prev === currentTotal) {
+        console.log(`prev total`, prev, total);
+        if (prev === total) {
           if (isLoop) {
             return 1;
           } else {
@@ -407,7 +417,7 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
 
         return prev + 1;
       });
-    }, 1000 / valueRate);
+    }, 1000 / frameRate);
 
     onStart(isLoop);
   };
@@ -429,7 +439,7 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
 
   const handleNext = () => {
     onSetValue((prev: number) => {
-      if (prev == currentTotal) return prev;
+      if (prev == total) return prev;
       return prev + 1;
     });
   };
@@ -439,7 +449,7 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
   };
 
   const handleRightmost = () => {
-    onSetValue(currentTotal);
+    onSetValue(total);
   };
 
   // 帧率 input
@@ -480,7 +490,7 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
             min={1}
             onPressEnter={() =>
               handleBeforeConfirm({
-                fn: setCurrentTotal,
+                fn: onSetTotal,
                 value: frameTotalInput,
                 min: 1,
               })
@@ -490,7 +500,7 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
             type="link"
             onClick={() =>
               handleBeforeConfirm({
-                fn: setCurrentTotal,
+                fn: onSetTotal,
                 value: frameTotalInput,
                 min: 1,
               })
@@ -509,7 +519,7 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
             onChange={handleframeCurrentInputChange}
             placeholder="请输入当前帧数"
             min={1}
-            max={currentTotal}
+            max={total}
             onPressEnter={() =>
               handleBeforeConfirm({
                 fn: onSetValue,
@@ -534,8 +544,8 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
       {/* info */}
       <div className={cx('player-bar-info')}>
         <span>模式: {frameMode === 'multiple' ? '多帧模式' : '单帧模式'}</span>
-        <span>fps: {valueRate}</span>
-        <span>倍速: {(valueRate / 24).toFixed(2)}x</span>
+        <span>fps: {frameRate}</span>
+        <span>倍速: {(frameRate / 24).toFixed(2)}x</span>
         <span>
           当前帧数:
           {calculatevalue({
@@ -543,7 +553,7 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
             tickWidth,
             splitCount,
             frameMode,
-            currentTotal,
+            total,
           })}
         </span>
       </div>
@@ -565,12 +575,12 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
             markRef,
             tickWidth,
             value,
-            currentTotal,
+            total,
           })}
         </div>
         {/* tail */}
         <div className={cx('player-bar-tail')} style={playerBarTailStyle({ ...conbineProps })}>
-          {currentTotal}
+          {total}
         </div>
       </div>
       <div className={cx('player-bar-control')}>
@@ -598,8 +608,8 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
                 tickWidth,
                 splitCount,
                 frameMode,
-                currentTotal,
-              })}/${currentTotal}`,
+                total,
+              })}/${total}`,
             },
             { value: 'time', label: '12:12' },
           ]}
@@ -625,15 +635,15 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
                         key={index}
                         className={cx(
                           'frame-dropdown-content-item',
-                          `${fps === valueRate && 'frame-dropdown-content-item--active'}`
+                          `${fps === frameRate && 'frame-dropdown-content-item--active'}`
                         )}
                         onClick={() => {
-                          onSetValueRate(fps);
+                          onSetFrameRate(fps);
                           setDropdownOpen(false);
                         }}>
                         <span className={cx('key')}>{`${fps}fps`} </span>
                         <span className={cx('value')}>{`${fps / 24}x`}</span>
-                        {fps === frameRate && <span>原始帧率</span>}
+                        {fps === originalFrameRate && <span>原始帧率</span>}
                       </div>
                     );
                   })}
@@ -650,7 +660,7 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
                     placeholder="自定义帧率"
                     onPressEnter={() => {
                       handleBeforeConfirm({
-                        fn: onSetValueRate,
+                        fn: onSetFrameRate,
                         value: frameRateInput,
                         min: 1,
                       });
@@ -666,7 +676,7 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
                     // style={{ color: 'rgba(126, 135, 255, 1)' }}
                     onClick={() => {
                       handleBeforeConfirm({
-                        fn: onSetValueRate,
+                        fn: onSetFrameRate,
                         value: frameRateInput,
                         min: 1,
                       });
