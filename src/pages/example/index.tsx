@@ -26,24 +26,24 @@ const PlayerBarExamplePage = () => {
       <PlayerBar
         parentWidth={size?.width as number}
         // {...requiredDefaultProps}
-        value={value}
-        total={total}
+        frameIndex={value}
+        frameTotal={total}
         frameRate={frameRate}
-        onSetValue={setValue}
-        onSetTotal={setTotal}
+        onSetFrameIndex={setValue}
+        onSetFrameTotal={setTotal}
         onSetFrameRate={setFrameRate}
       />
-      {/* <PlayerBar
+      <PlayerBar
         parentWidth={size?.width as number}
-        {...requiredDefaultProps}
+        // {...requiredDefaultProps}
         frameMode="multiple"
-        value={value}
-        total={total}
+        frameIndex={value}
+        frameTotal={total}
         frameRate={frameRate}
-        onSetValue={setValue}
-        onSetTotal={setTotal}
+        onSetFrameIndex={setValue}
+        onSetFrameTotal={setTotal}
         onSetFrameRate={setFrameRate}
-      /> */}
+      />
     </div>
   );
 };
