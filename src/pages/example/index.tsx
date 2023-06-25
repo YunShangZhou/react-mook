@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import classNames from 'classnames/bind';
 import { useSize } from 'ahooks';
-import PlayerBar from '../../components/PlayerBar';
+import PlayerBar, { requiredDefaultProps } from '../../components/PlayerBar';
 import styles from './index.module.css';
 
 const cx = classNames.bind(styles);
@@ -25,7 +25,7 @@ const PlayerBarExamplePage = () => {
       <span>父级宽度:{size?.width}</span>
       <PlayerBar
         parentWidth={size?.width as number}
-        // {...requiredDefaultProps}
+        {...requiredDefaultProps}
         frameIndex={value}
         frameTotal={total}
         frameRate={frameRate}
@@ -33,9 +33,9 @@ const PlayerBarExamplePage = () => {
         onSetFrameTotal={setTotal}
         onSetFrameRate={setFrameRate}
       />
-      {/* <PlayerBar
+      <PlayerBar
         parentWidth={size?.width as number}
-        // {...requiredDefaultProps}
+        {...requiredDefaultProps}
         frameMode="multiple"
         frameIndex={value}
         frameTotal={total}
@@ -43,7 +43,7 @@ const PlayerBarExamplePage = () => {
         onSetFrameIndex={setValue}
         onSetFrameTotal={setTotal}
         onSetFrameRate={setFrameRate}
-      /> */}
+      />
     </div>
   );
 };

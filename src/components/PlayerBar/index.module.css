@@ -1,4 +1,4 @@
-a{
+a {
   cursor: pointer;
 }
 
@@ -79,7 +79,23 @@ a{
     justify-content: center;
     align-items: center;
     border-radius: 2px;
-    transition: all 0.5s cubic-bezier(0.075, 0.82, 0.165, 1);
+  }
+}
+
+.player-bar-mark-hover {
+  opacity: 0;
+  transition: none;
+}
+
+.player-bar-mark-hover--review {
+  background: rgba(255, 125, 0, 0.5) !important;
+
+  .player-bar-mark-middle {
+    background: rgba(255, 125, 0, 0.5) !important;
+  }
+
+  &:hover {
+    opacity: 1;
   }
 }
 

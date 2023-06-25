@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Button, Select, Dropdown, Space, InputNumber, Divider } from 'antd';
+import { Button, Select, Dropdown, Space, InputNumber, Divider, Tooltip } from 'antd';
 import { CaretDownOutlined, DownOutlined } from '@ant-design/icons';
 import classNames from 'classnames/bind';
 import styles from './index.module.css';
@@ -30,6 +30,7 @@ interface PlayerBarOriginalProps {
   frameTotal: number;
   frameRate: number;
   parentWidth: number;
+  reviewCountsByFrame: Array<any>;
 
   originalFrameRate?: frameOptionsType;
   splitCount?: number; // 多帧模式下,格子数量
@@ -58,6 +59,16 @@ export const requiredDefaultProps = {
   frameTotal: 60,
   frameIndex: 20,
   frameRate: 48,
+  reviewCountsByFrame: [
+    {
+      frameIndex: 30,
+      count: 3,
+    },
+    {
+      frameIndex: 60,
+      count: 5,
+    },
+  ],
 };
 
 // 选填属性
@@ -66,7 +77,7 @@ export const optionalDefaultProps = {
   splitCount: 20,
   frameMode: 'single' as frameModeTypes,
   originalFrameRate: 24,
-  height: 120,
+  height: 40,
   tickHeight: 20,
   tickColorBgOdd: '#3F5770',
   tickColorBgEven: '#2F4459',
@@ -80,7 +91,7 @@ export const optionalDefaultProps = {
   tailFontSize: 14,
   markColorBg: `linear-gradient(to bottom , rgba(134, 142, 255, 0.53) , rgba(134, 142, 255, 0))`,
   markMiddleColorBg: 'rgba(169, 175, 252, 0.53)',
-  markMiddleWidth: 1,
+  markMiddleWidth: 2,
   onLoad: () => {},
   onStart: (loop = false) => {},
   onPause: () => {},
@@ -144,6 +155,24 @@ const markStyle = (config: any) => {
   return style;
 };
 
+const markHoverStyle = (config: any) => {
+  const { tickWidth, tickHeight, markColorBg, markHoverLeft = 50, frameMode, markMiddleWidth } = config;
+  const style = {
+    height: `${tickHeight}px`,
+    width: `${tickWidth}px`,
+    background: markColorBg,
+    // bottom: `${tickHeight}px`,
+    bottom: 0,
+    left: `${markHoverLeft}px`,
+  };
+
+  if (frameMode === 'multiple') {
+    Object.assign(style, { width: `${markMiddleWidth}px` });
+  }
+
+  return style;
+};
+
 const middleStyle = (config: any) => {
   const { markMiddleWidth, markMiddleColorBg } = config;
 
@@ -154,12 +183,23 @@ const middleStyle = (config: any) => {
 };
 
 const tipStyle = (config: any) => {
-  const { markLeft, tipWidth, tickWidth, frameMode, markMiddleWidth, tipFontSize, tipColor, tipBg, tickHeight } =
-    config;
+  const {
+    markHoverLeft,
+    markLeft,
+    tipWidth,
+    tickWidth,
+    frameMode,
+    markMiddleWidth,
+    tipFontSize,
+    tipColor,
+    tipBg,
+    tickHeight,
+    isMouseHover,
+  } = config;
 
-  let tipLeft = markLeft - tipWidth / 2 + tickWidth / 2;
+  let tipLeft = markHoverLeft - tipWidth / 2 + tickWidth / 2;
   if (frameMode === 'multiple') {
-    tipLeft = markLeft - tipWidth / 2 + markMiddleWidth / 2;
+    tipLeft = markHoverLeft - tipWidth / 2 + markMiddleWidth / 2;
   }
 
   return {
@@ -170,11 +210,12 @@ const tipStyle = (config: any) => {
     left: `${tipLeft}px`,
     height: `${tickHeight}px`,
     width: `${tipWidth}px`,
+    display: isMouseHover ? 'flex' : 'none',
   };
 };
 
 const renderMarkDom = (config: any) => {
-  const { markRef, splitCount = 20 } = config;
+  const { markRef, frameMode, splitCount = 20 } = config;
 
   const tipValue = calculateFrameIndex({
     splitCount,
@@ -186,9 +227,30 @@ const renderMarkDom = (config: any) => {
       <div className={cx('player-bar-mark')} ref={markRef} style={markStyle({ ...config })}>
         <div className={cx('player-bar-mark-middle')} style={middleStyle({ ...config })} />
       </div>
-      <div className={cx('player-bar-mark-tip')} style={tipStyle({ ...config })}>
-        {tipValue || '1'}
-      </div>
+      {tipValue !== 20 && (
+        <div className={cx('player-bar-mark-tip')} style={tipStyle({ ...config })}>
+          {tipValue || '1'}
+        </div>
+      )}
+      {tipValue === 20 ? (
+        <Tooltip placement="top" title={'3条批注'}>
+          <div
+            className={cx('player-bar-mark', 'player-bar-mark-hover', 'player-bar-mark-hover--review')}
+            ref={markRef}
+            style={markHoverStyle({ ...config })}>
+            {frameMode !== 'single' && (
+              <div className={cx('player-bar-mark-middle')} style={middleStyle({ ...config })} />
+            )}
+          </div>
+        </Tooltip>
+      ) : (
+        <div
+          className={cx('player-bar-mark', 'player-bar-mark-hover')}
+          ref={markRef}
+          style={markHoverStyle({ ...config })}>
+          <div className={cx('player-bar-mark-middle')} style={middleStyle({ ...config })} />
+        </div>
+      )}
     </>
   );
 };
@@ -211,13 +273,13 @@ const calculateMarkLeft = (config: any) => {
 };
 
 const calculateFrameIndex = (config: any) => {
-  const { markLeft, frameMode, splitCount, frameTotal, tickWidth } = config;
+  const { markHoverLeft, markLeft, frameMode, splitCount, frameTotal, tickWidth } = config;
   let frameIndex;
 
-  frameIndex = Math.ceil((markLeft + 1) / tickWidth);
+  frameIndex = Math.ceil((markHoverLeft + 1) / tickWidth);
   if (frameMode === 'multiple') {
     const scale = splitCount / frameTotal;
-    frameIndex = Math.ceil((markLeft + 1) / (tickWidth * scale));
+    frameIndex = Math.ceil((markHoverLeft + 1) / (tickWidth * scale));
   }
 
   return frameIndex;
@@ -249,6 +311,7 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
   const contentRef = useRef<HTMLDivElement>(null);
   const markRef = useRef<HTMLDivElement>(null);
   const [isMouseDown, setIsMouseDown] = useState(false);
+  const [isMouseHover, setIsMouseHover] = useState(false);
   const [frameMode, setFrameMode] = useState<frameModeTypes>(fm);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -283,10 +346,12 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
     markMiddleWidth,
     barWidth,
     markRef,
+    isMouseHover,
   };
 
+  const [markHoverLeft, setmarkHoverLeft] = useState(60);
   const [markLeft, setMarkLeft] = useState(calculateMarkLeft({ ...commonConfig }));
-  Object.assign(commonConfig, { markLeft });
+  Object.assign(commonConfig, { markLeft, markHoverLeft });
 
   useEffect(() => {
     onLoad();
@@ -326,6 +391,7 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
 
   const handleMouseLeave = () => {
     setIsMouseDown(false);
+    setIsMouseHover(false);
   };
 
   const handleMouseDown = (e: any) => {
@@ -334,6 +400,9 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
   };
 
   const handleMouseMove = (e: any) => {
+    !isMouseHover && setIsMouseHover(true);
+    handleMouseEventForMark({ e, mode: 'hover' });
+
     if (!isMouseDown) return;
     handleMouseEventForMark({ e, mode: 'move' });
   };
@@ -344,12 +413,21 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
     const { pageX: cursorLeft } = e;
     const { offsetLeft: contentLeft, offsetWidth: contentWidth } = contentRef?.current as HTMLDivElement;
 
+    let offsetLeft = cursorLeft - contentLeft;
+    if (frameMode === 'single') {
+      offsetLeft = cursorLeft - contentLeft;
+      const offsetCount = Math.ceil(offsetLeft / frameWidth);
+
+      offsetLeft = (offsetCount - 1) * frameWidth;
+    }
+
     const isOverflowLeft = cursorLeft < contentLeft + frameWidth / 2;
     const isOverflowRight = cursorLeft > contentLeft + (contentWidth - frameWidth / 2);
 
     // 边界处理
     switch (mode) {
       case 'move':
+      case 'hover':
         if (isOverflowLeft || isOverflowRight) return;
       case 'down':
         if (isOverflowLeft) {
@@ -362,14 +440,12 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
         }
     }
 
-    let offsetLeft = cursorLeft - contentLeft;
-    if (frameMode === 'single') {
-      offsetLeft = cursorLeft - contentLeft;
-      const offsetCount = Math.ceil(offsetLeft / frameWidth);
-
-      offsetLeft = offsetCount * frameWidth;
+    if (mode !== 'hover') {
+      onSetFrameIndex((offsetLeft / frameWidth).toFixed(0));
+      return;
     }
-    onSetFrameIndex(offsetLeft / frameWidth);
+
+    setmarkHoverLeft(offsetLeft);
   };
 
   const playSetTimeoutFnId = useRef<any>();
@@ -520,7 +596,7 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
         <span>倍速: {(frameRate / 24).toFixed(2)}x</span>
         <span>
           当前帧数:
-          {calculateFrameIndex({ ...commonConfig })}
+          {frameIndex}
         </span>
       </div>
       <div className={cx('player-bar-show')}>
@@ -559,9 +635,7 @@ const PlayerBar: React.FC<PlayerBarProps> = props => {
           options={[
             {
               value: 'frame',
-              label: `${calculateFrameIndex({
-                ...commonConfig,
-              })}/${frameTotal}`,
+              label: `${frameIndex}/${frameTotal}`,
             },
             { value: 'time', label: '12:12' },
           ]}
