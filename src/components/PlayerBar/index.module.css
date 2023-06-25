@@ -1,3 +1,7 @@
+a{
+  cursor: pointer;
+}
+
 .player-bar {
   display: flex;
   flex-direction: column;

@@ -22,7 +22,7 @@ const PlayerBarExamplePage = () => {
       ref={containerRef}
       className={cx('example-page')}
       style={{ display: 'flex', flexDirection: 'column', gap: 50 }}>
-      <span>{size?.width}</span>
+      <span>父级宽度:{size?.width}</span>
       <PlayerBar
         parentWidth={size?.width as number}
         // {...requiredDefaultProps}
@@ -33,7 +33,7 @@ const PlayerBarExamplePage = () => {
         onSetFrameTotal={setTotal}
         onSetFrameRate={setFrameRate}
       />
-      <PlayerBar
+      {/* <PlayerBar
         parentWidth={size?.width as number}
         // {...requiredDefaultProps}
         frameMode="multiple"
@@ -43,7 +43,7 @@ const PlayerBarExamplePage = () => {
         onSetFrameIndex={setValue}
         onSetFrameTotal={setTotal}
         onSetFrameRate={setFrameRate}
-      />
+      /> */}
     </div>
   );
 };

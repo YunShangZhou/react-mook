@@ -1,4 +1,6 @@
-.example-page{
-    border: 1px solid brown;
-    padding-top: 10vh;
+.example-page {
+  border: 1px solid brown;
+  /* padding-top: 10vh; */
+  width: 60%;
+  margin: 0 auto;
 }
